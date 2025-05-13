@@ -1,0 +1,43 @@
+.signup-container {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+}
+
+.left-side {
+  flex: 3; /* Occupies three-quarters of the width */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center contents vertically */
+  padding: 20px;
+  background-color: #f5f5f5; /* Optional background color */
+}
+
+.right-side {
+  flex: 1; /* Occupies one-quarter of the width */
+  display: flex;
+  align-items: center; /* Center contents vertically */
+  justify-content: center; /* Center contents horizontally */
+  padding: 20px;
+}
+.signup-image {
+  max-width: 100%; /* Make image responsive */
+  height: 90%;
+  position: relative; /* Maintain aspect ratio */
+}
+
+.literature {
+  margin-top: 20px; /* Space between image and text */
+}
+.signin-citation {
+  margin-top: 20px;
+  text-align: center; /* Center the text */
+}
+
+.signin-citation a {
+  color: #0078d4; /* Fluent UI link color */
+  text-decoration: none; /* Remove underline from the link */
+}
+
+.signin-citation a:hover {
+  text-decoration: underline; /* Underline on hover */
+}

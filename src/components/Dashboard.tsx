@@ -1,0 +1,344 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  PrimaryButton,
+  Stack,
+  IconButton,
+  IContextualMenuProps,
+  ContextualMenu,
+} from "@fluentui/react";
+import { useNavigate } from "react-router-dom";
+import {
+  ChevronLeft24Filled,
+  ChevronRight24Filled,
+  List24Filled,
+  SignOut24Filled,
+} from "@fluentui/react-icons";
+import DeleteAccount from "./AccountManagement/DeleteAccount";
+import SuspentAccount from "./AccountManagement/SuspendAccount";
+import CompaniesUnassigned from "./DataAccess/CompaniesUnassigned";
+import AllowedCompanies from "./DataAccess/AllowedCompanies";
+import InviteAFriend from "./Marketing/InviteFriend";
+import UpdateProfilePicture from "./AccountManagement/UpdateProfilePicture";
+import TermsAndConditions from "./legal/TermsAndConditions";
+import BusinessAllowanceTable from "./BusinessAllowanceTable";
+import VerifyUserPanel from "./AccountManagement/VerifyUserPanel";
+
+interface User {
+  id: string;
+  idNumber: string;
+  email: string;
+  phoneNumber: string;
+  imageUrl: string;
+}
+
+interface Company {
+  id: string;
+  name: string;
+}
+
+const Dashboard: React.FC = () => {
+  const [userData, setUserData] = useState<User | null>(null);
+  const [allowedCompanies, setAllowedCompanies] = useState<Company[]>([]);
+  const [menuProps, setMenuProps] = useState<IContextualMenuProps | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeView, setActiveView] = useState("dashboard");
+  const [showDataAccess, setShowDataAccess] = useState(false);
+  const [showAccountMgmt, setShowAccountMgmt] = useState(false);
+  const [profileMenuProps, setProfileMenuProps] =
+    useState<IContextualMenuProps | null>(null);
+  const [userverified, setUserVerified] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const onProfileClick = (ev: React.MouseEvent<HTMLElement>) => {
+    setProfileMenuProps({
+      items: [
+        { key: "signout", text: "Sign Out", onClick: () => handleSignOut() },
+        {
+          key: "updatePicture",
+          text: "Update Profile Picture",
+          onClick: () => setActiveView("update-profile-picture"),
+        },
+        {
+          key: "viewAllowed",
+          text: "View Allowed Companies",
+          onClick: () => setActiveView("allowed-companies"),
+        },
+        {
+          key: "terms",
+          text: "Terms and Conditions",
+          onClick: () => setActiveView("terms-and-conditions"),
+        },
+      ],
+      target: ev.currentTarget,
+    });
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = JSON.parse(localStorage.getItem("user") || "null") as User;
+      if (!user) {
+        alert("Unauthorized access");
+        return;
+      }
+      setUserData(user);
+      const response = await axios.get("/api/allowed-companies");
+      setAllowedCompanies(response.data);
+    };
+    fetchUserData();
+  }, []);
+
+  const handleDeleteAccount = async () => {
+    if (userData) {
+      await axios.delete(`/api/delete-account/${userData.id}`);
+      localStorage.removeItem("user");
+      alert("Account deleted successfully");
+      navigate("/");
+    }
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
+  const toggleMenu = (ev: React.MouseEvent<HTMLElement>) => {
+    setMenuProps({
+      items: [
+        {
+          key: "changePassword",
+          text: "Change Password",
+          onClick: () => alert("Change Password clicked"),
+        },
+        {
+          key: "verifyEmail",
+          text: "Verify Email",
+          onClick: () => alert("Verify Email clicked"),
+        },
+        {
+          key: "verifyPhone",
+          text: "Verify Phone",
+          onClick: () => alert("Verify Phone clicked"),
+        },
+        {
+          key: "uploadIdPhoto",
+          text: "Upload ID Photo",
+          onClick: () => alert("Upload ID Photo clicked"),
+        },
+        { key: "signOut", text: "Sign Out", onClick: handleSignOut },
+      ],
+      target: ev.currentTarget,
+    });
+  };
+
+  return (
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      {/* Sidebar */}
+      <div
+        style={{
+          width: sidebarOpen ? "200px" : "60px",
+          backgroundColor: "#f3f3f3",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          transition: "width 0.3s ease-in-out",
+          padding: "10px 0",
+          boxShadow: "2px 0 5px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{ width: "100%", border: "none", background: "none" }}
+          >
+            {sidebarOpen ? <ChevronLeft24Filled /> : <ChevronRight24Filled />}
+          </button>
+
+          {/* Data Access Management */}
+          <button
+            onClick={() => setShowDataAccess(!showDataAccess)}
+            style={buttonStyle}
+          >
+            <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+            {sidebarOpen && "Data Access Management"}
+          </button>
+          {showDataAccess && sidebarOpen && (
+            <div style={submenuStyle}>
+              <SidebarSubButton
+                label="Allowed Companies"
+                isActive={activeView === "allowed-companies"}
+                onClick={() => setActiveView("allowed-companies")}
+              />
+              <SidebarSubButton
+                label="Disallowed Companies"
+                isActive={activeView === "disallowed-companies"}
+                onClick={() => setActiveView("disallowed-companies")}
+              />
+              <SidebarSubButton
+                label="All Registered Companies"
+                isActive={activeView === "all-companies"}
+                onClick={() => setActiveView("all-companies")}
+              />
+            </div>
+          )}
+
+          {/* Account Management */}
+          <button
+            onClick={() => setShowAccountMgmt(!showAccountMgmt)}
+            style={buttonStyle}
+          >
+            <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+            {sidebarOpen && "Account Management"}
+          </button>
+          {showAccountMgmt && sidebarOpen && (
+            <div style={submenuStyle}>
+              <SidebarSubButton
+                label="Delete Account"
+                isActive={activeView === "delete-account"}
+                onClick={() => setActiveView("delete-account")}
+              />
+              <SidebarSubButton
+                label="Suspend Account"
+                isActive={activeView === "suspend-account"}
+                onClick={() => setActiveView("suspend-account")}
+              />
+            </div>
+          )}
+
+          {/* Refer a Friend */}
+          <button
+            onClick={() => setActiveView("refer-a-friend")}
+            style={{
+              ...buttonStyle,
+              fontWeight: activeView === "refer-a-friend" ? "bold" : "normal",
+              color: activeView === "refer-a-friend" ? "#0078d4" : "inherit",
+            }}
+          >
+            <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+            {sidebarOpen && "Refer a Friend"}
+          </button>
+        </div>
+
+        {/* Sign Out */}
+        <div style={{ width: "100%" }}>
+          <button onClick={handleSignOut} style={buttonStyle}>
+            <SignOut24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+            {sidebarOpen && "Sign Out"}
+          </button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div style={{ flex: 1 }}>
+        {/* Header */}
+        <div
+          style={{
+            width: "100%",
+            backgroundColor: "#0078d4",
+            color: "white",
+            padding: "10px 20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <h2 style={{ textAlign: "center", flexGrow: 1, margin: 0 }}>
+            Secure your most important data during Transactions involving your
+            personal data
+          </h2>
+          <div>
+            <img
+              src={userData?.imageUrl || "/default-profile.png"}
+              alt="Profile"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                objectFit: "cover",
+                cursor: "pointer",
+              }}
+              onClick={onProfileClick}
+            />
+            {profileMenuProps && <ContextualMenu {...profileMenuProps} />}
+          </div>
+        </div>
+
+        <div style={{ padding: "20px" }}>
+          {userverified ? (
+            // Your normal dashboard views
+            <>
+              {activeView === "allowed-companies" && <AllowedCompanies />}
+              {activeView === "disallowed-companies" && <CompaniesUnassigned />}
+              {activeView === "all-companies" && <BusinessAllowanceTable />}
+              {activeView === "delete-account" && <DeleteAccount />}
+              {activeView === "suspend-account" && <SuspentAccount />}
+              {activeView === "refer-a-friend" && <InviteAFriend />}
+              {activeView === "update-profile-picture" && (
+                <UpdateProfilePicture />
+              )}
+              {activeView === "terms-and-conditions" && <TermsAndConditions />}
+            </>
+          ) : (
+            <VerifyUserPanel
+              userStatus={{
+                email: { value: userData?.email || "", verified: false },
+                phone: { value: userData?.phoneNumber || "", verified: false },
+                idNumber: { value: userData?.idNumber || "", verified: false },
+              }}
+              onVerify={(type) => {
+                // You can add logic here to perform verification, e.g. show OTP
+                alert(`Start verification for ${type}`);
+              }}
+              onProceed={() => setUserVerified(true)}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Reusable sub-menu button
+const SidebarSubButton: React.FC<{
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}> = ({ label, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      padding: "6px 10px",
+      fontSize: "0.95em",
+      fontWeight: isActive ? "bold" : "normal",
+      color: isActive ? "#0078d4" : "inherit",
+    }}
+  >
+    <List24Filled style={{ marginRight: 8 }} /> {label}
+  </button>
+);
+
+// Styling helpers
+const buttonStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  width: "100%",
+  padding: "10px",
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+};
+
+const submenuStyle: React.CSSProperties = {
+  paddingLeft: 20,
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+};
+
+export default Dashboard;
