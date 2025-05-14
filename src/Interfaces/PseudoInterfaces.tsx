@@ -13,3 +13,9 @@ export interface allowedCompaniesProps {
   emailAddress?: number; // The ID of the company
   phoneNumber?: string; // The name of the company
 }
+
+export interface accountManagementProps {
+  idnumber?: string; // The ID of the account
+  emailAddress: string; // The email address of the account
+  phoneNumber: number; // The phone number of the account
+}

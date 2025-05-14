@@ -23,6 +23,7 @@ import UpdateProfilePicture from "./AccountManagement/UpdateProfilePicture";
 import TermsAndConditions from "./legal/TermsAndConditions";
 import BusinessAllowanceTable from "./BusinessAllowanceTable";
 import VerifyUserPanel from "./AccountManagement/VerifyUserPanel";
+import { accountManagementProps } from "../Interfaces/PseudoInterfaces";
 
 interface User {
   id: string;
@@ -49,6 +50,13 @@ const Dashboard: React.FC = () => {
     useState<IContextualMenuProps | null>(null);
   const [userverified, setUserVerified] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  const userDetails: accountManagementProps = {
+    idnumber: "22186940",
+    emailAddress: "mwanzias@gmail.com",
+    phoneNumber: 254721803652,
+  };
+
   const navigate = useNavigate();
 
   const onProfileClick = (ev: React.MouseEvent<HTMLElement>) => {
@@ -139,6 +147,7 @@ const Dashboard: React.FC = () => {
         style={{
           width: sidebarOpen ? "200px" : "60px",
           backgroundColor: "#f3f3f3",
+
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -271,7 +280,9 @@ const Dashboard: React.FC = () => {
               {activeView === "allowed-companies" && <AllowedCompanies />}
               {activeView === "disallowed-companies" && <CompaniesUnassigned />}
               {activeView === "all-companies" && <BusinessAllowanceTable />}
-              {activeView === "delete-account" && <DeleteAccount />}
+              {activeView === "delete-account" && (
+                <DeleteAccount {...userDetails} />
+              )}
               {activeView === "suspend-account" && <SuspentAccount />}
               {activeView === "refer-a-friend" && <InviteAFriend />}
               {activeView === "update-profile-picture" && (
@@ -281,16 +292,11 @@ const Dashboard: React.FC = () => {
             </>
           ) : (
             <VerifyUserPanel
-              userStatus={{
-                email: { value: userData?.email || "", verified: false },
-                phone: { value: userData?.phoneNumber || "", verified: false },
-                idNumber: { value: userData?.idNumber || "", verified: false },
-              }}
-              onVerify={(type) => {
-                // You can add logic here to perform verification, e.g. show OTP
-                alert(`Start verification for ${type}`);
-              }}
-              onProceed={() => setUserVerified(true)}
+              emailAddress="mwanzias@gmail.com"
+              phoneNumber={254721803652}
+              phoneVerified={false}
+              emailVerified={false}
+              onVerify={() => setUserVerified(true)}
             />
           )}
         </div>
