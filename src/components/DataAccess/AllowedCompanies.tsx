@@ -1,5 +1,7 @@
 //import { allowedCompaniesProps } from "../../Interfaces/PseudoInterfaces";
-
+import React, { useState } from "react";
+import { Button } from "@fluentui/react-button";
+import { Edit24Regular } from "@fluentui/react-icons";
 import { Badge } from "@fluentui/react-badge";
 import {
   createTableColumn,
@@ -14,6 +16,7 @@ import {
   TableColumnDefinition,
   TableColumnId,
 } from "@fluentui/react-table";
+import CompanyAllowEdit from "./CompanyAllowEdit";
 
 type namecell = {
   label: string;
@@ -42,58 +45,6 @@ type displayItem = {
   sector: sectorCell;
   allowed: dataaccessCell;
 };
-
-const columns: TableColumnDefinition<displayItem>[] = [
-  createTableColumn<displayItem>({
-    columnId: "name",
-    renderHeaderCell: () => {
-      return "Company Name";
-    },
-    renderCell: (item) => {
-      return <TableCellLayout>{item.name.companyname}</TableCellLayout>;
-    },
-  }),
-  createTableColumn<displayItem>({
-    columnId: "sector",
-    renderHeaderCell: () => {
-      return "Company Sector";
-    },
-    renderCell: (item) => {
-      return (
-        <TableCellLayout>
-          {item.sector.label} - {item.sector.sectorname}
-        </TableCellLayout>
-      );
-    },
-  }),
-  createTableColumn<displayItem>({
-    columnId: "allowed",
-    renderHeaderCell: () => {
-      return "Allowed Data Access";
-    },
-    renderCell: (item) => {
-      const allowedItems = item.allowed.dataaccess.filter(
-        (entry) => entry.allowed
-      );
-
-      return (
-        <TableCellLayout>
-          {allowedItems.length > 0
-            ? allowedItems.map((entry, index) => (
-                <Badge
-                  key={index}
-                  appearance="filled"
-                  style={{ marginRight: 4 }}
-                >
-                  {entry.dataname}
-                </Badge>
-              ))
-            : "None"}
-        </TableCellLayout>
-      );
-    },
-  }),
-];
 
 const items: displayItem[] = [
   {
@@ -143,55 +94,152 @@ const getCellFocusMode = (columnId: TableColumnId): DataGridCellFocusMode => {
 };
 
 const AllowedCompanies: React.FC = () => {
-  return (
-    <DataGrid
-      items={items}
-      columns={columns}
-      sortable
-      selectionMode="multiselect"
-      getRowId={(item) => item.name.companyname}
-      onSelectionChange={(e, data) => console.log(data)}
-      style={{ minWidth: "550px" }}
-    >
-      <DataGridHeader>
-        <DataGridRow
-          style={{
-            backgroundColor: "#e6f4ff", // light blue shade
-          }}
-          selectionCell={{
-            checkboxIndicator: { "aria-label": "Select all rows" },
-          }}
-        >
-          {({ renderHeaderCell }) => (
-            <DataGridHeaderCell
-              style={{
-                fontWeight: "bold",
-                color: "#0078d4",
-                // Fluent UI blue
-              }}
-            >
-              {renderHeaderCell()}
-            </DataGridHeaderCell>
-          )}
-        </DataGridRow>
-      </DataGridHeader>
-      <DataGridBody<displayItem>>
-        {({ item, rowId }) => (
-          <DataGridRow<displayItem>
-            key={rowId}
-            selectionCell={{
-              checkboxIndicator: { "aria-label": "Select row" },
+  const [editingItems, setEditingItems] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<displayItem>(items[0]);
+
+  const columns: TableColumnDefinition<displayItem>[] = [
+    createTableColumn<displayItem>({
+      columnId: "name",
+      renderHeaderCell: () => {
+        return "Company Name";
+      },
+      renderCell: (item) => {
+        return <TableCellLayout>{item.name.companyname}</TableCellLayout>;
+      },
+    }),
+    createTableColumn<displayItem>({
+      columnId: "sector",
+      renderHeaderCell: () => {
+        return "Company Sector";
+      },
+      renderCell: (item) => {
+        return (
+          <TableCellLayout>
+            {item.sector.label} - {item.sector.sectorname}
+          </TableCellLayout>
+        );
+      },
+    }),
+    createTableColumn<displayItem>({
+      columnId: "allowed",
+      renderHeaderCell: () => {
+        return "Allowed Data Access";
+      },
+      renderCell: (item) => {
+        const allowedItems = item.allowed.dataaccess.filter(
+          (entry) => entry.allowed
+        );
+
+        return (
+          <TableCellLayout>
+            {allowedItems.length > 0
+              ? allowedItems.map((entry, index) => (
+                  <Badge
+                    key={index}
+                    appearance="filled"
+                    style={{ marginRight: 4 }}
+                  >
+                    {entry.dataname}
+                  </Badge>
+                ))
+              : "None"}
+          </TableCellLayout>
+        );
+      },
+    }),
+    createTableColumn<displayItem>({
+      columnId: "actions",
+      renderHeaderCell: () => "Actions",
+      renderCell: (item) => (
+        <TableCellLayout>
+          <Button
+            icon={<Edit24Regular />}
+            appearance="primary"
+            shape="circular"
+            style={{
+              borderRadius: "9999px",
+              padding: "6px 12px",
+            }}
+            onClick={() => {
+              setEditingItems(true);
+              setEditingCompany(item);
             }}
           >
-            {({ renderCell, columnId }) => (
-              <DataGridCell focusMode={getCellFocusMode(columnId)}>
-                {renderCell(item)}
-              </DataGridCell>
+            Edit
+          </Button>
+        </TableCellLayout>
+      ),
+    }),
+  ];
+
+  const handleCompanyEditSave = () => {
+    setEditingItems(false);
+  };
+
+  return (
+    <div>
+      <DataGrid
+        items={items}
+        columns={columns}
+        sortable
+        selectionMode="multiselect"
+        getRowId={(item) => item.name.companyname}
+        onSelectionChange={(e, data) => console.log(data)}
+        style={{ minWidth: "550px" }}
+      >
+        <DataGridHeader>
+          <DataGridRow
+            style={{
+              backgroundColor: "#e6f4ff", // light blue shade
+              textAlign: "center",
+            }}
+            selectionCell={{
+              checkboxIndicator: { "aria-label": "Select all rows" },
+            }}
+          >
+            {({ renderHeaderCell }) => (
+              <DataGridHeaderCell
+                style={{
+                  fontWeight: "bold",
+                  color: "#0078d4",
+                }}
+              >
+                {renderHeaderCell()}
+              </DataGridHeaderCell>
             )}
           </DataGridRow>
+        </DataGridHeader>
+        <DataGridBody<displayItem>>
+          {({ item, rowId }) => (
+            <DataGridRow<displayItem>
+              key={rowId}
+              selectionCell={{
+                checkboxIndicator: { "aria-label": "Select row" },
+              }}
+            >
+              {({ renderCell, columnId }) => (
+                <DataGridCell focusMode={getCellFocusMode(columnId)}>
+                  {renderCell(item)}
+                </DataGridCell>
+              )}
+            </DataGridRow>
+          )}
+        </DataGridBody>
+      </DataGrid>
+
+      <div>
+        {editingItems && (
+          <CompanyAllowEdit
+            companyname={editingCompany.name.companyname}
+            sectorname={editingCompany.sector.sectorname}
+            allowed={editingCompany.allowed.dataaccess.map(
+              (entry) => entry.dataname
+            )}
+            onSave={handleCompanyEditSave}
+          />
         )}
-      </DataGridBody>
-    </DataGrid>
+      </div>
+    </div>
   );
 };
 
