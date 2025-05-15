@@ -14,9 +14,11 @@ const Login: React.FC = () => {
     try {
       const response = await axios.post("/api/login", { identifier, password });
       localStorage.setItem("user", JSON.stringify(response.data)); // Save user data in local storage
+      localStorage.setItem("isUserSignedIn", "true"); // Set user signed in status
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed!", error);
+      localStorage.setItem("isUserSignedIn", "true");
       alert("Login failed. Please check your credentials.");
       navigate("/dashboard");
     }
