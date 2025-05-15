@@ -95,7 +95,7 @@ const getCellFocusMode = (columnId: TableColumnId): DataGridCellFocusMode => {
 
 const AllowedCompanies: React.FC = () => {
   const [editingItems, setEditingItems] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<displayItem>(items[0]);
+  const [editingCompany, setEditingCompany] = useState<displayItem>([] as any);
 
   const columns: TableColumnDefinition<displayItem>[] = [
     createTableColumn<displayItem>({
@@ -170,10 +170,36 @@ const AllowedCompanies: React.FC = () => {
         </TableCellLayout>
       ),
     }),
+    createTableColumn<displayItem>({
+      columnId: "blockinfo",
+      renderHeaderCell: () => "blockinfo",
+      renderCell: (item) => (
+        <TableCellLayout>
+          <Button
+            icon={<Edit24Regular />}
+            appearance="primary"
+            shape="circular"
+            style={{
+              borderRadius: "9999px",
+              padding: "6px 12px",
+            }}
+            onClick={() => {
+              console.log(
+                "This company is to be blocked",
+                item.name.companyname
+              );
+            }}
+          >
+            Block Access
+          </Button>
+        </TableCellLayout>
+      ),
+    }),
   ];
 
   const handleCompanyEditSave = () => {
     setEditingItems(false);
+    setEditingCompany({} as displayItem);
   };
 
   return (
@@ -232,9 +258,9 @@ const AllowedCompanies: React.FC = () => {
           <CompanyAllowEdit
             companyname={editingCompany.name.companyname}
             sectorname={editingCompany.sector.sectorname}
-            allowed={editingCompany.allowed.dataaccess.map(
-              (entry) => entry.dataname
-            )}
+            allowed={editingCompany.allowed.dataaccess.map((entry) => {
+              return entry.allowed ? entry.dataname : "";
+            })}
             onSave={handleCompanyEditSave}
           />
         )}
