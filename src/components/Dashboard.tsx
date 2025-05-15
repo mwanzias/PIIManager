@@ -48,7 +48,9 @@ const Dashboard: React.FC = () => {
   const [showAccountMgmt, setShowAccountMgmt] = useState(false);
   const [profileMenuProps, setProfileMenuProps] =
     useState<IContextualMenuProps | null>(null);
-  const [userverified, setUserVerified] = useState(false);
+  const [userVerified, setUserVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const userDetails: accountManagementProps = {
@@ -140,6 +142,25 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  useEffect(() => {
+    setEmailVerified(emailVerified);
+    setPhoneVerified(phoneVerified);
+    if (phoneVerified === true && emailVerified === true) {
+      setUserVerified(true);
+      setActiveView("allowed-companies");
+    }
+    console.log("User verified in use effect:", userVerified);
+  }, [emailVerified, phoneVerified, userVerified]);
+
+  const handleuserVerification = (toVerify: string) => {
+    if (toVerify === "phone") {
+      setPhoneVerified(true);
+    } else if (toVerify === "email") {
+      setEmailVerified(true);
+    }
+    console.log("User verified:", toVerify);
+    console.log("Verification Status:", userVerified);
+  };
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       {/* Sidebar */}
@@ -274,7 +295,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div style={{ padding: "20px" }}>
-          {userverified ? (
+          {userVerified ? (
             // Your normal dashboard views
             <>
               {activeView === "allowed-companies" && <AllowedCompanies />}
@@ -296,7 +317,7 @@ const Dashboard: React.FC = () => {
               phoneNumber={254721803652}
               phoneVerified={false}
               emailVerified={false}
-              onVerify={() => setUserVerified(true)}
+              onVerify={handleuserVerification}
             />
           )}
         </div>
