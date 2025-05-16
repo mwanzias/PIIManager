@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { TextField, PrimaryButton, Stack, Separator } from "@fluentui/react";
 import { Button } from "@fluentui/react-components";
 import { useAuth } from "../context/AuthContext";
+import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
 
 const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState<string>(""); // Email or Phone
@@ -128,13 +129,7 @@ const Login: React.FC = () => {
           >
             <Button
               appearance="primary"
-              icon={
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-                  alt="Google"
-                  style={{ width: 20, height: 20 }}
-                />
-              }
+              icon={<GooglePayIcon />}
               onClick={() => handleSocialLogin("google")}
             >
               Google
@@ -142,13 +137,7 @@ const Login: React.FC = () => {
 
             <Button
               appearance="primary"
-              icon={
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
-                  alt="Microsoft"
-                  style={{ width: 20, height: 20 }}
-                />
-              }
+              icon={<MicrosoftIcon />}
               onClick={() => handleSocialLogin("microsoft")}
             >
               Microsoft

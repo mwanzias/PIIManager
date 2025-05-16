@@ -9,6 +9,7 @@ import { Button } from "@fluentui/react-components";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
 
 const SignupForm: React.FC = () => {
   const [idNumber, setIdNumber] = useState<string>("");
@@ -235,13 +236,7 @@ const SignupForm: React.FC = () => {
           >
             <Button
               appearance="primary"
-              icon={
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-                  alt="Google"
-                  style={{ width: 20, height: 20 }}
-                />
-              }
+              icon={<GooglePayIcon />}
               onClick={() => handleSocialSignup("google")}
             >
               Sign Up with Google
@@ -249,13 +244,7 @@ const SignupForm: React.FC = () => {
 
             <Button
               appearance="primary"
-              icon={
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
-                  alt="Microsoft"
-                  style={{ width: 20, height: 20 }}
-                />
-              }
+              icon={<MicrosoftIcon />}
               onClick={() => handleSocialSignup("microsoft")}
             >
               Sign Up with Microsoft
