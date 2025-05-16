@@ -8,6 +8,7 @@ interface User {
   email: string;
   phoneNumber: string;
   imageUrl?: string;
+  socialLogin?: string; // Track if user signed in via Google or Microsoft
 }
 
 // Authentication context interface

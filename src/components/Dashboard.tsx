@@ -23,6 +23,7 @@ import UpdateProfilePicture from "./AccountManagement/UpdateProfilePicture";
 import TermsAndConditions from "./legal/TermsAndConditions";
 import BusinessAllowanceTable from "./BusinessAllowanceTable";
 import VerifyUserPanel from "./AccountManagement/VerifyUserPanel";
+import SocialLoginUserInfo from "./AccountManagement/SocialLoginUserInfo";
 import { accountManagementProps } from "../Interfaces/PseudoInterfaces";
 import BillingManager from "./AccountManagement/BillingManager";
 import AppFooter from "../appFooter";
@@ -47,6 +48,7 @@ const Dashboard: React.FC = () => {
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [needsSocialLoginInfo, setNeedsSocialLoginInfo] = useState(false);
 
   const userDetails: accountManagementProps = {
     idnumber: user?.idNumber || "22186940",
@@ -160,6 +162,22 @@ const Dashboard: React.FC = () => {
     }
     console.log("User verified in use effect:", userVerified);
   }, [emailVerified, phoneVerified, userVerified]);
+
+  // Check if user signed in via social login and needs to provide additional info
+  useEffect(() => {
+    if (user?.socialLogin && (!user.idNumber || !user.phoneNumber)) {
+      setNeedsSocialLoginInfo(true);
+    } else {
+      setNeedsSocialLoginInfo(false);
+    }
+  }, [user]);
+
+  const handleSocialLoginInfoComplete = () => {
+    setNeedsSocialLoginInfo(false);
+    // After completing the social login info, we can consider the user verified
+    setUserVerified(true);
+    setActiveView("allowed-companies");
+  };
 
   const handleuserVerification = (toVerify: string) => {
     if (toVerify === "phone") {
@@ -310,7 +328,9 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div style={{ padding: "20px" }}>
-            {userVerified ? (
+            {needsSocialLoginInfo ? (
+              <SocialLoginUserInfo onComplete={handleSocialLoginInfoComplete} />
+            ) : userVerified ? (
               // Your normal dashboard views
               <>
                 {activeView === "allowed-companies" && <AllowedCompanies />}
