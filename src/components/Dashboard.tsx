@@ -352,8 +352,8 @@ const Dashboard: React.FC = () => {
               <VerifyUserPanel
                 emailAddress={user?.email || "mwanzias@gmail.com"}
                 phoneNumber={parseInt(user?.phoneNumber || "254721803652")}
-                phoneVerified={false}
-                emailVerified={false}
+                phoneVerified={phoneVerified}
+                emailVerified={emailVerified}
                 onVerify={handleuserVerification}
               />
             )}
