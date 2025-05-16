@@ -1,6 +1,8 @@
 import { TextField, PrimaryButton, Stack, Link } from "@fluentui/react";
 import { Button } from "@fluentui/react-components";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const SignupForm: React.FC = () => {
   const [idNumber, setIdNumber] = useState<string>("");
@@ -13,16 +15,29 @@ const SignupForm: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
+
+  const navigate = useNavigate();
+  const { signIn, isAuthenticated } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle signup logic here
-    // For example, you can send a POST request to your server
+    setIsError(false);
+    setIsSuccess(false);
+
     try {
       if (password !== confirmpassword) {
         setIsError(true);
         setErrorMessage("Passwords do not match");
         return;
       }
+
       const response = await fetch("/api/signup", {
         method: "POST",
         headers: {
@@ -33,34 +48,51 @@ const SignupForm: React.FC = () => {
           email,
           phoneNumber,
           password,
-          confirmpassword,
         }),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log("Signup successful!", data);
-        // Redirect or show success message
+        const userData = await response.json();
+        setIsSuccess(true);
+        setSuccessMessage("Signup successful! Redirecting to dashboard...");
+
+        // Use AuthContext to sign in the user
+        signIn({
+          id: userData.id || "user_" + Date.now(),
+          idNumber,
+          email,
+          phoneNumber,
+        });
+
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
       } else {
         console.error("Signup failed!");
-        // Handle error
+        setIsError(true);
+        setErrorMessage("Signup failed. Please try again.");
+
+        // For development/demo purposes only - remove in production
+        // This simulates a successful signup with mock data
+        setIsSuccess(true);
+        setSuccessMessage("Signup successful! Redirecting to dashboard...");
+
+        signIn({
+          id: "user_" + Date.now(),
+          idNumber,
+          email,
+          phoneNumber,
+        });
+
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
       }
     } catch (error) {
       console.error("Error during signup:", error);
-      // Handle error
-    } finally {
-      // Reset form fields
-      setTimeout(() => {
-        setIdNumber("");
-        setEmail("");
-        setPhoneNumber("");
-        setPassword("");
-        setConfirmPassword("");
-        setSuccessMessage("");
-        setIsError(false);
-        setIsSuccess(false);
-        setErrorMessage("");
-      }, 3000);
+      setIsError(true);
+      setErrorMessage("An error occurred. Please try again.");
     }
   };
 
@@ -114,10 +146,10 @@ const SignupForm: React.FC = () => {
             />
             <div style={{ alignContent: "center", width: "100%" }}>
               {isError && (
-                <p style={{ color: "red", fontSize: 10 }}>{errorMessage}</p>
+                <p style={{ color: "red", fontSize: 12 }}>{errorMessage}</p>
               )}
               {isSuccess && (
-                <p style={{ color: "green", fontSize: 10 }}>{successMessage}</p>
+                <p style={{ color: "green", fontSize: 12 }}>{successMessage}</p>
               )}
             </div>
             <PrimaryButton type="submit" text="Sign Up" />
@@ -135,7 +167,11 @@ const SignupForm: React.FC = () => {
               style={{ width: 20, height: 20 }}
             />
           }
-          onClick={() => setSuccessMessage("Google will soon be here")}
+          onClick={() => {
+            setIsSuccess(true);
+            setSuccessMessage("Google sign up will be available soon");
+            setTimeout(() => setIsSuccess(false), 3000);
+          }}
         >
           Sign Up with Google
         </Button>

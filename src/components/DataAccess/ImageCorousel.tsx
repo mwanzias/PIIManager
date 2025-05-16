@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 
 const slides = [
   {
@@ -34,29 +36,41 @@ const slides = [
 ];
 
 const ImageCarousel: React.FC = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000); // Change slide every 4 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="left-side" style={{ textAlign: "center" }}>
-      <div className="signup-image">
-        <img
-          src={slides[currentSlide].image}
-          alt="Illustrative"
-          className="signup-image"
-        />
-        <div className="literature">
-          <h2>{slides[currentSlide].caption}</h2>
-          <p>{slides[currentSlide].story}</p>
-        </div>
-      </div>
+      <Carousel
+        showArrows={true}
+        showStatus={false}
+        showThumbs={false}
+        infiniteLoop={true}
+        autoPlay={true}
+        interval={5000}
+        stopOnHover={true}
+        swipeable={true}
+        emulateTouch={true}
+        dynamicHeight={false}
+        className="custom-carousel"
+      >
+        {slides.map((slide, index) => (
+          <div key={index} className="carousel-slide">
+            <img
+              src={slide.image}
+              alt={`Slide ${index + 1}`}
+              style={{
+                width: "100%",
+                height: "600px", // Increased height as requested
+                maxHeight: "100vh", // Ensures it doesn't get too large on bigger screens
+                minHeight: "400px", // Ensures it doesn't get too small on smaller screens
+                objectFit: "scale-down", // Ensures images maintain aspect ratio while filling the container
+              }}
+            />
+            <div className="literature" style={{ padding: "15px" }}>
+              <h2>{slide.caption}</h2>
+              <p>{slide.story}</p>
+            </div>
+          </div>
+        ))}
+      </Carousel>
     </div>
   );
 };

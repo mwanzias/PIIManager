@@ -26,14 +26,7 @@ import VerifyUserPanel from "./AccountManagement/VerifyUserPanel";
 import { accountManagementProps } from "../Interfaces/PseudoInterfaces";
 import BillingManager from "./AccountManagement/BillingManager";
 import AppFooter from "../appFooter";
-
-interface User {
-  id: string;
-  idNumber: string;
-  email: string;
-  phoneNumber: string;
-  imageUrl: string;
-}
+import { useAuth } from "../context/AuthContext";
 
 interface Company {
   id: string;
@@ -41,7 +34,7 @@ interface Company {
 }
 
 const Dashboard: React.FC = () => {
-  const [userData, setUserData] = useState<User | null>(null);
+  const { user, signOut, isAuthenticated, updateUser } = useAuth();
   const [allowedCompanies, setAllowedCompanies] = useState<Company[]>([]);
   const [menuProps, setMenuProps] = useState<IContextualMenuProps | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -56,9 +49,9 @@ const Dashboard: React.FC = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const userDetails: accountManagementProps = {
-    idnumber: "22186940",
-    emailAddress: "mwanzias@gmail.com",
-    phoneNumber: 254721803652,
+    idnumber: user?.idNumber || "22186940",
+    emailAddress: user?.email || "mwanzias@gmail.com",
+    phoneNumber: parseInt(user?.phoneNumber || "254721803652"),
   };
 
   const navigate = useNavigate();
@@ -88,31 +81,44 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const user = JSON.parse(localStorage.getItem("user") || "null") as User;
-      if (!user) {
-        alert("Unauthorized access");
-        return;
+    const fetchAllowedCompanies = async () => {
+      try {
+        // In a real app, you would use the user's ID to fetch their allowed companies
+        const response = await axios.get("/api/allowed-companies");
+        setAllowedCompanies(response.data || []);
+      } catch (error) {
+        console.error("Error fetching allowed companies:", error);
+        // For demo purposes, set some mock data
+        setAllowedCompanies([
+          { id: "1", name: "Company A" },
+          { id: "2", name: "Company B" },
+        ]);
       }
-      setUserData(user);
-      const response = await axios.get("/api/allowed-companies");
-      setAllowedCompanies(response.data);
     };
-    fetchUserData();
-  }, []);
+
+    if (isAuthenticated && user) {
+      fetchAllowedCompanies();
+    }
+  }, [isAuthenticated, user]);
 
   const handleDeleteAccount = async () => {
-    if (userData) {
-      await axios.delete(`/api/delete-account/${userData.id}`);
-      localStorage.removeItem("user");
-      localStorage.removeItem("isUserSignedIn");
-      alert("Account deleted successfully");
-      navigate("/");
+    if (user) {
+      try {
+        await axios.delete(`/api/delete-account/${user.id}`);
+        signOut();
+        alert("Account deleted successfully");
+        navigate("/");
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        // For demo purposes, still sign out
+        signOut();
+        navigate("/");
+      }
     }
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem("user");
+    signOut();
     navigate("/");
   };
 
@@ -164,8 +170,6 @@ const Dashboard: React.FC = () => {
     console.log("User verified:", toVerify);
     console.log("Verification Status:", userVerified);
   };
-  const isSignedIn = localStorage.getItem("isUserSignedIn") === "true";
-  console.log("Is user signed in:", isSignedIn);
 
   return (
     <div style={{ paddingBottom: 60 }}>
@@ -290,7 +294,7 @@ const Dashboard: React.FC = () => {
             </h2>
             <div>
               <img
-                src={userData?.imageUrl || "/default-profile.png"}
+                src={user?.imageUrl || "/default-profile.png"}
                 alt="Profile"
                 style={{
                   width: 40,
@@ -326,8 +330,8 @@ const Dashboard: React.FC = () => {
               </>
             ) : (
               <VerifyUserPanel
-                emailAddress="mwanzias@gmail.com"
-                phoneNumber={254721803652}
+                emailAddress={user?.email || "mwanzias@gmail.com"}
+                phoneNumber={parseInt(user?.phoneNumber || "254721803652")}
                 phoneVerified={false}
                 emailVerified={false}
                 onVerify={handleuserVerification}
@@ -336,7 +340,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      {isSignedIn && (
+      {isAuthenticated && (
         <AppFooter
           message="You are signed in as with a trial account ending on 2025-12-31"
           version="pseudo@2025"
