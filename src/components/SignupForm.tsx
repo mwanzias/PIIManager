@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
 import { colors } from "../styling/theme";
+import API_CONFIG from "../config/api";
 
 const SignupForm: React.FC = () => {
   const [idNumber, setIdNumber] = useState<string>("");
@@ -102,7 +103,7 @@ const SignupForm: React.FC = () => {
         return;
       }
 
-      const response = await fetch("/api/signup", {
+      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.signup}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -8,6 +8,7 @@ import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
 import ProcessingSpinner from "./Marketing/Spinner";
 import { colors, cardStyles } from "../styling/theme";
 import { ShieldLockFilled } from "@fluentui/react-icons";
+import API_CONFIG from "../config/api";
 
 const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState<string>(""); // Email or Phone
@@ -72,25 +73,27 @@ const Login: React.FC = () => {
     setIsLoggingIn(true);
 
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await axios.post(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.login}`, { 
+        username: identifier, // Using identifier as username (email or phone)
+        password 
+      });
 
-      const response = await axios.post("/api/login", { identifier, password });
-
-      // Mock user data in case the API call doesn't return proper data
-      const mockUser = {
-        id: "user123",
-        idNumber: "22186940",
-        email: identifier.includes("@") ? identifier : "user@example.com",
-        phoneNumber: identifier.includes("@") ? "254721803652" : identifier,
-      };
-
-      // For a real app, check if MFA is enabled for this user
-      const userData = response.data || mockUser;
-
-      // Simulate MFA being enabled
-      setTempUserData(userData);
-      setShowMfaVerification(true);
+      if (response.data && response.data.user) {
+        const userData = response.data.user;
+        
+        // Check if MFA is enabled for this user
+        if (response.data.mfaRequired) {
+          setTempUserData(userData);
+          setShowMfaVerification(true);
+        } else {
+          // No MFA required, proceed with login
+          signIn(userData);
+          navigate("/dashboard");
+        }
+      } else {
+        throw new Error("Invalid response format");
+      }
+      
       setIsLoggingIn(false);
     } catch (error) {
       console.error("Login failed!", error);
