@@ -12,9 +12,11 @@ import Signup from "./components/Signup";
 import StarterPage from "./components/StarterPage";
 import AccountDeletedBanner from "./components/AccountManagement/AccountDeletedMessage";
 import { useAuth } from "./context/AuthContext";
+import TestimonialModeration from "./components/TestimonialModeration";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Protected route component
-const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({
+const ProtectedRouteComponent: React.FC<{ element: React.ReactElement }> = ({
   element,
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -36,7 +38,15 @@ const App: React.FC = () => {
         <Route path="/deleted" element={<AccountDeletedBanner />} />
         <Route
           path="/dashboard"
-          element={<ProtectedRoute element={<Dashboard />} />}
+          element={<ProtectedRouteComponent element={<Dashboard />} />}
+        />
+        <Route
+          path="/moderate-testimonials"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <TestimonialModeration />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </Router>

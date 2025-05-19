@@ -26,6 +26,7 @@ import {
   listItemStyles,
 } from "../styling/theme";
 import Pricing from "./Pricing";
+import Testimonials from "./Testimonials";
 
 // Step container styles (specific to this component)
 const stepContainerStyles = {
@@ -404,6 +405,9 @@ const StarterPage: React.FC = () => {
       <div id="pricing-section">
         <Pricing />
       </div>
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* Footer CTA */}
       <Stack styles={footerCTAStyles} horizontalAlign="center">
