@@ -312,7 +312,7 @@ const Dashboard: React.FC = () => {
             </h2>
             <div>
               <img
-                src={user?.imageUrl || "/default-profile.png"}
+                src={user?.imageUrl || "/logo192.png"}
                 alt="Profile"
                 style={{
                   width: 40,
