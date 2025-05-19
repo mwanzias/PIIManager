@@ -24,6 +24,8 @@ const pricingCardStyles = {
     minWidth: "300px",
     maxWidth: "400px",
     textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
   },
 };
 
@@ -49,6 +51,13 @@ const savingsBadgeStyles = {
   },
 };
 
+const buttonContainerStyles = {
+  root: {
+    marginTop: "auto",
+    paddingTop: "24px",
+  },
+};
+
 const stackTokens: IStackTokens = {
   childrenGap: 20,
 };
@@ -65,10 +74,12 @@ const Pricing: React.FC = () => {
             </Text>
             <Text styles={priceStyles}>$1</Text>
             <Text styles={{ root: { marginBottom: "24px" } }}>per month</Text>
-            <PrimaryButton
-              text="Get Started"
-              styles={primaryButtonStyles}
-            />
+            <Stack styles={buttonContainerStyles}>
+              <PrimaryButton
+                text="Get Started"
+                styles={primaryButtonStyles}
+              />
+            </Stack>
           </Stack>
           
           <Stack styles={pricingCardStyles}>
@@ -78,10 +89,12 @@ const Pricing: React.FC = () => {
             <Text styles={priceStyles}>$10</Text>
             <Text styles={{ root: { marginBottom: "8px" } }}>per year</Text>
             <Text styles={savingsBadgeStyles}>Save $2</Text>
-            <PrimaryButton
-              text="Get Started"
-              styles={primaryButtonStyles}
-            />
+            <Stack styles={buttonContainerStyles}>
+              <PrimaryButton
+                text="Get Started"
+                styles={primaryButtonStyles}
+              />
+            </Stack>
           </Stack>
         </Stack>
       </Stack>
