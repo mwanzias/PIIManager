@@ -46,11 +46,19 @@ const CompanyAllowEdit: React.FC<CompanyAllowEditProps> = ({
         );
       })}
       <div>
-        <PrimaryButton text="Save" onClick={onSave}>
+        <PrimaryButton
+          text="Save"
+          onClick={onSave}
+          style={{ marginRight: "10px", borderRadius: "9999px" }}
+        >
           Save
         </PrimaryButton>
-        <PrimaryButton text="Cancel" onClick={onSave}>
-          Save
+        <PrimaryButton
+          text="Cancel"
+          onClick={onSave}
+          style={{ borderRadius: "9999px" }}
+        >
+          Cancel
         </PrimaryButton>
       </div>
     </div>

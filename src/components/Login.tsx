@@ -5,6 +5,7 @@ import { TextField, PrimaryButton, Stack, Separator } from "@fluentui/react";
 import { Button } from "@fluentui/react-components";
 import { useAuth } from "../context/AuthContext";
 import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
+import ProcessingSpinner from "./Marketing/Spinner";
 
 const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState<string>(""); // Email or Phone
@@ -15,6 +16,8 @@ const Login: React.FC = () => {
   const [otpEmail, setOtpEmail] = useState<string>("");
   const [otp, setOtp] = useState<string>("");
   const [socialLoginType, setSocialLoginType] = useState<string>("");
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const navigate = useNavigate();
   const { signIn, isAuthenticated } = useAuth();
 
@@ -29,11 +32,15 @@ const Login: React.FC = () => {
   const handleOtpVerification = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setIsVerifying(true);
 
     try {
       // In a real app, you would verify the OTP with your backend
-      // For now, we'll simulate a successful verification
+      // For now, we'll simulate a successful verification with a delay
       console.log(`Verifying OTP: ${otp} for email: ${otpEmail}`);
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Mock user data based on social login
       const mockUser = {
@@ -55,14 +62,19 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setIsLoggingIn(true);
 
     try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       const response = await axios.post("/api/login", { identifier, password });
       // Use the AuthContext signIn function instead of directly setting localStorage
       signIn(response.data);
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed!", error);
+      setIsLoggingIn(false);
       setError("Login failed. Please check your credentials.");
 
       // For development/demo purposes only - remove in production
@@ -94,82 +106,116 @@ const Login: React.FC = () => {
   };
 
   return (
-    <>
-      {!showOtpVerification ? (
-        <>
-          <form onSubmit={handleLogin}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "80vh",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "400px",
+          padding: "20px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          borderRadius: "8px",
+          backgroundColor: "white",
+        }}
+      >
+        {!showOtpVerification ? (
+          <>
+            <form onSubmit={handleLogin}>
+              <Stack tokens={{ childrenGap: 20 }}>
+                <TextField
+                  label="Email or Phone Number"
+                  value={identifier}
+                  onChange={(e, newValue) => setIdentifier(newValue || "")}
+                  required
+                />
+                <TextField
+                  label="Password"
+                  type="password"
+                  value={password}
+                  onChange={(e, newValue) => setPassword(newValue || "")}
+                  required
+                />
+                {error && <div style={{ color: "red" }}>{error}</div>}
+                <PrimaryButton
+                  type="submit"
+                  text={isLoggingIn ? "Logging in..." : "Login"}
+                  disabled={isLoggingIn}
+                />
+                <ProcessingSpinner
+                  show={isLoggingIn}
+                  message="Verifying your credentials..."
+                />
+              </Stack>
+            </form>
+
+            <Separator styles={{ root: { margin: "20px 0" } }}>
+              Or sign in with
+            </Separator>
+
+            <Stack
+              horizontal
+              tokens={{ childrenGap: 10 }}
+              horizontalAlign="center"
+              style={{ marginTop: 20 }}
+            >
+              <Button
+                appearance="primary"
+                icon={<GooglePayIcon />}
+                onClick={() => handleSocialLogin("google")}
+              >
+                Google
+              </Button>
+
+              <Button
+                appearance="primary"
+                icon={<MicrosoftIcon />}
+                onClick={() => handleSocialLogin("microsoft")}
+              >
+                Microsoft
+              </Button>
+            </Stack>
+          </>
+        ) : (
+          <form onSubmit={handleOtpVerification}>
             <Stack tokens={{ childrenGap: 20 }}>
+              <h3>Email Verification</h3>
+              <p>
+                We've sent a verification code to {otpEmail}. Please enter the
+                code below to verify your email.
+              </p>
               <TextField
-                label="Email or Phone Number"
-                value={identifier}
-                onChange={(e, newValue) => setIdentifier(newValue || "")}
-                required
-              />
-              <TextField
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e, newValue) => setPassword(newValue || "")}
+                label="Verification Code"
+                value={otp}
+                onChange={(e, newValue) => setOtp(newValue || "")}
                 required
               />
               {error && <div style={{ color: "red" }}>{error}</div>}
-              <PrimaryButton type="submit" text="Login" />
+              <PrimaryButton
+                type="submit"
+                text={isVerifying ? "Verifying..." : "Verify"}
+                disabled={isVerifying}
+              />
+              <ProcessingSpinner
+                show={isVerifying}
+                message="Verifying your code..."
+              />
+              <Button
+                appearance="subtle"
+                onClick={() => setShowOtpVerification(false)}
+              >
+                Back to Login
+              </Button>
             </Stack>
           </form>
-
-          <Separator styles={{ root: { margin: "20px 0" } }}>
-            Or sign in with
-          </Separator>
-
-          <Stack
-            horizontal
-            tokens={{ childrenGap: 10 }}
-            horizontalAlign="center"
-            style={{ marginTop: 20 }}
-          >
-            <Button
-              appearance="primary"
-              icon={<GooglePayIcon />}
-              onClick={() => handleSocialLogin("google")}
-            >
-              Google
-            </Button>
-
-            <Button
-              appearance="primary"
-              icon={<MicrosoftIcon />}
-              onClick={() => handleSocialLogin("microsoft")}
-            >
-              Microsoft
-            </Button>
-          </Stack>
-        </>
-      ) : (
-        <form onSubmit={handleOtpVerification}>
-          <Stack tokens={{ childrenGap: 20 }}>
-            <h3>Email Verification</h3>
-            <p>
-              We've sent a verification code to {otpEmail}. Please enter the
-              code below to verify your email.
-            </p>
-            <TextField
-              label="Verification Code"
-              value={otp}
-              onChange={(e, newValue) => setOtp(newValue || "")}
-              required
-            />
-            {error && <div style={{ color: "red" }}>{error}</div>}
-            <PrimaryButton type="submit" text="Verify" />
-            <Button
-              appearance="subtle"
-              onClick={() => setShowOtpVerification(false)}
-            >
-              Back to Login
-            </Button>
-          </Stack>
-        </form>
-      )}
-    </>
+        )}
+      </div>
+    </div>
   );
 };
 

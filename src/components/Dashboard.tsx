@@ -34,6 +34,26 @@ interface Company {
   name: string;
 }
 
+// Styling helpers
+const buttonStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  width: "100%",
+  padding: "10px",
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  borderRadius: "4px",
+  transition: "background-color 0.2s ease",
+};
+
+const submenuStyle: React.CSSProperties = {
+  paddingLeft: 20,
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+};
+
 const Dashboard: React.FC = () => {
   const { user, signOut, isAuthenticated, updateUser } = useAuth();
   const [allowedCompanies, setAllowedCompanies] = useState<Company[]>([]);
@@ -49,6 +69,7 @@ const Dashboard: React.FC = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [needsSocialLoginInfo, setNeedsSocialLoginInfo] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const userDetails: accountManagementProps = {
     idnumber: user?.idNumber || "22186940",
@@ -57,6 +78,22 @@ const Dashboard: React.FC = () => {
   };
 
   const navigate = useNavigate();
+
+  // Handle window resize for responsive layout
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Initial check
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const onProfileClick = (ev: React.MouseEvent<HTMLElement>) => {
     setProfileMenuProps({
@@ -189,15 +226,89 @@ const Dashboard: React.FC = () => {
     console.log("Verification Status:", userVerified);
   };
 
+  // Reusable sub-menu button
+  const SidebarSubButton: React.FC<{
+    label: string;
+    isActive: boolean;
+    onClick: () => void;
+  }> = ({ label, isActive, onClick }) => (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "6px 10px",
+        fontSize: "0.95em",
+        fontWeight: isActive ? "bold" : "normal",
+        color: isActive ? "#0078d4" : "inherit",
+      }}
+    >
+      <List24Filled style={{ marginRight: 8 }} /> {label}
+    </button>
+  );
+
   return (
-    <div style={{ paddingBottom: 60 }}>
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Mobile menu toggle button */}
+      {isMobile && (
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          style={{
+            position: "fixed",
+            top: "10px",
+            left: "10px",
+            zIndex: 1001,
+            background: sidebarOpen ? "transparent" : "#0078d4",
+            border: "none",
+            borderRadius: "50%",
+            width: "40px",
+            height: "40px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+            fontSize: "1.5rem",
+          }}
+        >
+          {sidebarOpen ? "✕" : "☰"}
+        </button>
+      )}
+
+      {/* Overlay for mobile sidebar */}
+      {isMobile && sidebarOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 999,
+          }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <div style={{ display: "flex", flex: 1 }}>
         {/* Sidebar */}
         <div
           style={{
-            width: sidebarOpen ? "200px" : "60px",
+            width: sidebarOpen ? (isMobile ? "250px" : "200px") : "60px",
             backgroundColor: "#f3f3f3",
-
+            position: isMobile && sidebarOpen ? "fixed" : "relative",
+            height: isMobile && sidebarOpen ? "100vh" : "auto",
+            zIndex: isMobile && sidebarOpen ? 1000 : 1,
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -209,7 +320,15 @@ const Dashboard: React.FC = () => {
           <div>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{ width: "100%", border: "none", background: "none" }}
+              style={{
+                width: "100%",
+                border: "none",
+                background: "none",
+                padding: "10px",
+                display: "flex",
+                justifyContent: sidebarOpen ? "flex-end" : "center",
+                alignItems: "center",
+              }}
             >
               {sidebarOpen ? <ChevronLeft24Filled /> : <ChevronRight24Filled />}
             </button>
@@ -218,7 +337,12 @@ const Dashboard: React.FC = () => {
             <button
               disabled={!userVerified}
               onClick={() => setShowDataAccess(!showDataAccess)}
-              style={buttonStyle}
+              style={{
+                ...buttonStyle,
+                opacity: userVerified ? 1 : 0.5,
+                fontWeight: showDataAccess ? "bold" : "normal",
+                color: showDataAccess ? "#0078d4" : "inherit",
+              }}
             >
               <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
               {sidebarOpen && "Data Access Management"}
@@ -243,7 +367,12 @@ const Dashboard: React.FC = () => {
             <button
               disabled={!userVerified}
               onClick={() => setShowAccountMgmt(!showAccountMgmt)}
-              style={buttonStyle}
+              style={{
+                ...buttonStyle,
+                opacity: userVerified ? 1 : 0.5,
+                fontWeight: showAccountMgmt ? "bold" : "normal",
+                color: showAccountMgmt ? "#0078d4" : "inherit",
+              }}
             >
               <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
               {sidebarOpen && "Account Management"}
@@ -254,11 +383,6 @@ const Dashboard: React.FC = () => {
                   label="Delete Account"
                   isActive={activeView === "delete-account"}
                   onClick={() => setActiveView("delete-account")}
-                />
-                <SidebarSubButton
-                  label="Suspend Account"
-                  isActive={activeView === "suspend-account"}
-                  onClick={() => setActiveView("suspend-account")}
                 />
                 <SidebarSubButton
                   label="Billing Setup"
@@ -274,6 +398,7 @@ const Dashboard: React.FC = () => {
               onClick={() => setActiveView("refer-a-friend")}
               style={{
                 ...buttonStyle,
+                opacity: userVerified ? 1 : 0.5,
                 fontWeight: activeView === "refer-a-friend" ? "bold" : "normal",
                 color: activeView === "refer-a-friend" ? "#0078d4" : "inherit",
               }}
@@ -285,7 +410,13 @@ const Dashboard: React.FC = () => {
 
           {/* Sign Out */}
           <div style={{ width: "100%" }}>
-            <button onClick={handleSignOut} style={buttonStyle}>
+            <button
+              onClick={handleSignOut}
+              style={{
+                ...buttonStyle,
+                marginTop: "auto",
+              }}
+            >
               <SignOut24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
               {sidebarOpen && "Sign Out"}
             </button>
@@ -293,22 +424,36 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Main content */}
-        <div style={{ flex: 1 }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           {/* Header */}
           <div
             style={{
               width: "100%",
               backgroundColor: "#0078d4",
               color: "white",
-              padding: "10px 20px",
+              padding: isMobile ? "10px" : "10px 20px",
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
-            <h2 style={{ textAlign: "center", flexGrow: 1, margin: 0 }}>
-              Secure your most important data during Transactions involving your
-              personal data
+            <h2
+              style={{
+                textAlign: isMobile ? "center" : "left",
+                flexGrow: 1,
+                margin: 0,
+                fontSize: isMobile ? "1rem" : "1.5rem",
+                marginBottom: isMobile ? "10px" : 0,
+              }}
+            >
+              Secure your most important data during Transactions
             </h2>
             <div>
               <img
@@ -327,7 +472,13 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ padding: "20px" }}>
+          <div
+            style={{
+              padding: isMobile ? "10px" : "20px",
+              overflowX: "auto",
+              flex: 1,
+            }}
+          >
             {needsSocialLoginInfo ? (
               <SocialLoginUserInfo onComplete={handleSocialLoginInfoComplete} />
             ) : userVerified ? (
@@ -360,56 +511,24 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
       {isAuthenticated && (
-        <AppFooter
-          message="You are signed in as with a trial account ending on 2025-12-31"
-          version="pseudo@2025"
-        />
+        <div
+          style={{
+            backgroundColor: "#f3f3f3",
+            padding: "10px 20px",
+            borderTop: "1px solid #e0e0e0",
+          }}
+        >
+          <AppFooter
+            message="You are signed in as with a trial account ending on 2025-12-31"
+            version="pseudo@2025"
+          />
+        </div>
       )}
     </div>
   );
-};
-
-// Reusable sub-menu button
-const SidebarSubButton: React.FC<{
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}> = ({ label, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    style={{
-      display: "flex",
-      alignItems: "center",
-      background: "none",
-      border: "none",
-      cursor: "pointer",
-      padding: "6px 10px",
-      fontSize: "0.95em",
-      fontWeight: isActive ? "bold" : "normal",
-      color: isActive ? "#0078d4" : "inherit",
-    }}
-  >
-    <List24Filled style={{ marginRight: 8 }} /> {label}
-  </button>
-);
-
-// Styling helpers
-const buttonStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  width: "100%",
-  padding: "10px",
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-};
-
-const submenuStyle: React.CSSProperties = {
-  paddingLeft: 20,
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
 };
 
 export default Dashboard;

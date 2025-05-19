@@ -253,7 +253,13 @@ const AllowedCompanies: React.FC = () => {
         </DataGridBody>
       </DataGrid>
 
-      <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         {editingItems && (
           <CompanyAllowEdit
             companyname={editingCompany.name.companyname}
