@@ -305,7 +305,7 @@ const StarterPage: React.FC = () => {
               </Text>
               <ul style={{ paddingLeft: "20px", margin: "0" }}>
                 <li style={listItemStyles}>
-                  Constantly repeating your ID, email, or phone
+                  Constantly sharing your ID, email, or phone with new businesses with no way to revoke access
                 </li>
                 <li style={listItemStyles}>
                   Risk of personal data being misused

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Stack,
   Text,
@@ -6,6 +6,9 @@ import {
   IconButton,
   Spinner,
   SpinnerSize,
+  PrimaryButton,
+  MessageBar,
+  MessageBarType,
 } from "@fluentui/react";
 import "../styling/general.css";
 import {
@@ -14,14 +17,9 @@ import {
   sectionTitleStyles,
   colors,
 } from "../styling/theme";
-
-interface Testimonial {
-  id: string;
-  text: string;
-  email: string;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected';
-}
+import { Testimonial } from "../types/testimonial";
+import { testimonialService } from "../services/testimonialService";
+import TestimonialForm from "./TestimonialForm";
 
 const testimonialCardStyles = {
   root: {
@@ -91,49 +89,30 @@ const stackTokens: IStackTokens = {
   childrenGap: 24,
 };
 
-// Sample testimonials data - In a real app, this would come from your backend
-const sampleTestimonials: Testimonial[] = [
-  {
-    id: "1",
-    text: "This service has completely changed how I handle my personal information. No more worrying about my data being misused!",
-    email: "john.doe@example.com",
-    date: "2024-03-15",
-    status: "approved",
-  },
-  {
-    id: "2",
-    text: "The pseudo-number system is brilliant. I feel much more secure knowing my real information is protected.",
-    email: "sarah.smith@example.com",
-    date: "2024-03-14",
-    status: "approved",
-  },
-  {
-    id: "3",
-    text: "Finally, a solution that puts privacy first. The yearly plan is totally worth it for the peace of mind.",
-    email: "michael.brown@example.com",
-    date: "2024-03-13",
-    status: "approved",
-  },
-  {
-    id: "4",
-    text: "Great service! The customer support is excellent and the system is very intuitive.",
-    email: "emma.wilson@example.com",
-    date: "2024-03-12",
-    status: "approved",
-  },
-  {
-    id: "5",
-    text: "I've recommended this to all my friends. It's exactly what we needed for better privacy.",
-    email: "david.clark@example.com",
-    date: "2024-03-11",
-    status: "approved",
-  },
-];
-
 const Testimonials: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const testimonialsPerPage = 3;
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTestimonials = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { testimonials: fetchedTestimonials, total } = await testimonialService.getApprovedTestimonials(currentPage, testimonialsPerPage);
+      setTestimonials(fetchedTestimonials);
+    } catch (err) {
+      setError('Failed to load testimonials. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTestimonials();
+  }, [currentPage]);
 
   // Function to get name from email
   const getNameFromEmail = (email: string) => {
@@ -153,25 +132,42 @@ const Testimonials: React.FC = () => {
     });
   };
 
-  // Get current testimonials
-  const indexOfLastTestimonial = currentPage * testimonialsPerPage;
-  const indexOfFirstTestimonial = indexOfLastTestimonial - testimonialsPerPage;
-  const currentTestimonials = sampleTestimonials
-    .filter(t => t.status === 'approved')
-    .slice(indexOfFirstTestimonial, indexOfLastTestimonial);
-  const totalPages = Math.ceil(sampleTestimonials.filter(t => t.status === 'approved').length / testimonialsPerPage);
-
   const handlePageChange = (newPage: number) => {
-    setIsLoading(true);
     setCurrentPage(newPage);
-    // Simulate loading delay
-    setTimeout(() => setIsLoading(false), 500);
   };
+
+  const handleTestimonialSubmitted = () => {
+    setShowForm(false);
+    fetchTestimonials(); // Refresh testimonials after submission
+  };
+
+  const totalPages = Math.ceil(testimonials.length / testimonialsPerPage);
+  const startIndex = (currentPage - 1) * testimonialsPerPage;
+  const endIndex = startIndex + testimonialsPerPage;
+  const currentTestimonials = testimonials.slice(startIndex, endIndex);
+
+  // If there are no testimonials and we're not loading, don't render the section
+  if (!isLoading && testimonials.length === 0) {
+    return null;
+  }
 
   return (
     <Stack styles={sectionStyles} horizontalAlign="center">
       <Stack styles={containerStyles} horizontalAlign="center">
         <Text styles={sectionTitleStyles}>What Our Users Say</Text>
+
+        {error && (
+          <MessageBar
+            messageBarType={MessageBarType.error}
+            isMultiline={false}
+            onDismiss={() => setError(null)}
+            dismissButtonAriaLabel="Close"
+            styles={{ root: { marginBottom: "16px", width: "100%" } }}
+          >
+            {error}
+          </MessageBar>
+        )}
+
         {isLoading ? (
           <Spinner size={SpinnerSize.large} label="Loading testimonials..." />
         ) : (
@@ -198,20 +194,40 @@ const Testimonials: React.FC = () => {
               ))}
             </Stack>
 
-            {/* Pagination */}
-            <Stack horizontal styles={paginationStyles}>
-              <IconButton
-                iconProps={{ iconName: 'ChevronLeft' }}
-                disabled={currentPage === 1}
-                onClick={() => handlePageChange(currentPage - 1)}
-              />
-              <Text>{`Page ${currentPage} of ${totalPages}`}</Text>
-              <IconButton
-                iconProps={{ iconName: 'ChevronRight' }}
-                disabled={currentPage === totalPages}
-                onClick={() => handlePageChange(currentPage + 1)}
-              />
-            </Stack>
+            {/* Only show pagination if there are multiple pages */}
+            {totalPages > 1 && (
+              <Stack horizontal styles={paginationStyles}>
+                <IconButton
+                  iconProps={{ iconName: 'ChevronLeft' }}
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                />
+                <Text>{`Page ${currentPage} of ${totalPages}`}</Text>
+                <IconButton
+                  iconProps={{ iconName: 'ChevronRight' }}
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                />
+              </Stack>
+            )}
+
+            {/* Share Your Experience Button */}
+            <PrimaryButton
+              text={showForm ? "Hide Form" : "Share Your Experience"}
+              onClick={() => setShowForm(!showForm)}
+              styles={{
+                root: {
+                  marginTop: "32px",
+                  borderRadius: "25px",
+                  padding: "8px 24px",
+                },
+              }}
+            />
+
+            {/* Testimonial Form */}
+            {showForm && (
+              <TestimonialForm onSubmitted={handleTestimonialSubmitted} />
+            )}
           </>
         )}
       </Stack>
