@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { TextField, PrimaryButton, Stack, Separator } from "@fluentui/react";
-import { Button } from "@fluentui/react-components";
+import { Button, RadioGroup, Radio } from "@fluentui/react-components";
 import { useAuth } from "../context/AuthContext";
 import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
 import ProcessingSpinner from "./Marketing/Spinner";
+import { colors, cardStyles } from "../styling/theme";
+import { ShieldLockFilled } from "@fluentui/react-icons";
 
 const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState<string>(""); // Email or Phone
@@ -13,11 +15,16 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [showOtpVerification, setShowOtpVerification] =
     useState<boolean>(false);
+  const [showMfaVerification, setShowMfaVerification] =
+    useState<boolean>(false);
   const [otpEmail, setOtpEmail] = useState<string>("");
   const [otp, setOtp] = useState<string>("");
+  const [mfaCode, setMfaCode] = useState<string>("");
+  const [mfaMethod, setMfaMethod] = useState<"email" | "phone">("email");
   const [socialLoginType, setSocialLoginType] = useState<string>("");
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [tempUserData, setTempUserData] = useState<any>(null);
   const navigate = useNavigate();
   const { signIn, isAuthenticated } = useAuth();
 
@@ -69,9 +76,22 @@ const Login: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const response = await axios.post("/api/login", { identifier, password });
-      // Use the AuthContext signIn function instead of directly setting localStorage
-      signIn(response.data);
-      navigate("/dashboard");
+
+      // Mock user data in case the API call doesn't return proper data
+      const mockUser = {
+        id: "user123",
+        idNumber: "22186940",
+        email: identifier.includes("@") ? identifier : "user@example.com",
+        phoneNumber: identifier.includes("@") ? "254721803652" : identifier,
+      };
+
+      // For a real app, check if MFA is enabled for this user
+      const userData = response.data || mockUser;
+
+      // Simulate MFA being enabled
+      setTempUserData(userData);
+      setShowMfaVerification(true);
+      setIsLoggingIn(false);
     } catch (error) {
       console.error("Login failed!", error);
       setIsLoggingIn(false);
@@ -79,14 +99,14 @@ const Login: React.FC = () => {
 
       // For development/demo purposes only - remove in production
       // This simulates a successful login with mock data
-      const mockUser = {
+      setTempUserData({
         id: "user123",
         idNumber: "22186940",
         email: identifier.includes("@") ? identifier : "user@example.com",
         phoneNumber: identifier.includes("@") ? "254721803652" : identifier,
-      };
-      signIn(mockUser);
-      navigate("/dashboard");
+      });
+      setShowMfaVerification(true);
+      setIsLoggingIn(false);
     }
   };
 
@@ -105,6 +125,26 @@ const Login: React.FC = () => {
     console.log(`Sending OTP to ${mockEmail} for ${provider} login`);
   };
 
+  const handleMfaVerification = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setIsVerifying(true);
+
+    // In a real app, you would verify the MFA code with your backend
+    // For now, we'll simulate a successful verification with a delay
+    setTimeout(() => {
+      setIsVerifying(false);
+      // Use the AuthContext signIn function
+      signIn(tempUserData);
+      navigate("/dashboard");
+    }, 2000);
+  };
+
+  const handleSendMfaCode = () => {
+    // In a real app, this would trigger sending an MFA code to the selected method
+    console.log(`Sending MFA code to ${mfaMethod}: ${identifier}`);
+  };
+
   return (
     <div
       style={{
@@ -118,13 +158,77 @@ const Login: React.FC = () => {
         style={{
           width: "100%",
           maxWidth: "400px",
-          padding: "20px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          padding: "24px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
           borderRadius: "8px",
-          backgroundColor: "white",
+          backgroundColor: colors.white,
         }}
       >
-        {!showOtpVerification ? (
+        {showMfaVerification ? (
+          <form onSubmit={handleMfaVerification}>
+            <Stack tokens={{ childrenGap: 20 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: "16px",
+                }}
+              >
+                <ShieldLockFilled
+                  style={{
+                    fontSize: "24px",
+                    color: colors.primary,
+                    marginRight: "8px",
+                  }}
+                />
+                <h3 style={{ margin: 0 }}>Multi-Factor Authentication</h3>
+              </div>
+
+              <p>
+                For added security, please verify your identity with a one-time
+                code. Choose how you'd like to receive your verification code:
+              </p>
+
+              <RadioGroup
+                value={mfaMethod}
+                onChange={(e, data) =>
+                  setMfaMethod(data.value as "email" | "phone")
+                }
+              >
+                <Radio value="email" label="Email" />
+                <Radio value="phone" label="SMS to Phone" />
+              </RadioGroup>
+
+              <Button
+                appearance="subtle"
+                onClick={handleSendMfaCode}
+                style={{ alignSelf: "flex-start" }}
+              >
+                Send Code
+              </Button>
+
+              <TextField
+                label="Verification Code"
+                value={mfaCode}
+                onChange={(e, newValue) => setMfaCode(newValue || "")}
+                required
+              />
+
+              {error && <div style={{ color: colors.error }}>{error}</div>}
+
+              <PrimaryButton
+                type="submit"
+                text={isVerifying ? "Verifying..." : "Verify"}
+                disabled={isVerifying}
+              />
+
+              <ProcessingSpinner
+                show={isVerifying}
+                message="Verifying your code..."
+              />
+            </Stack>
+          </form>
+        ) : !showOtpVerification ? (
           <>
             <form onSubmit={handleLogin}>
               <Stack tokens={{ childrenGap: 20 }}>
@@ -141,7 +245,7 @@ const Login: React.FC = () => {
                   onChange={(e, newValue) => setPassword(newValue || "")}
                   required
                 />
-                {error && <div style={{ color: "red" }}>{error}</div>}
+                {error && <div style={{ color: colors.error }}>{error}</div>}
                 <PrimaryButton
                   type="submit"
                   text={isLoggingIn ? "Logging in..." : "Login"}
@@ -181,7 +285,7 @@ const Login: React.FC = () => {
               </Button>
             </Stack>
           </>
-        ) : (
+        ) : showOtpVerification ? (
           <form onSubmit={handleOtpVerification}>
             <Stack tokens={{ childrenGap: 20 }}>
               <h3>Email Verification</h3>
@@ -195,7 +299,7 @@ const Login: React.FC = () => {
                 onChange={(e, newValue) => setOtp(newValue || "")}
                 required
               />
-              {error && <div style={{ color: "red" }}>{error}</div>}
+              {error && <div style={{ color: colors.error }}>{error}</div>}
               <PrimaryButton
                 type="submit"
                 text={isVerifying ? "Verifying..." : "Verify"}
@@ -213,7 +317,7 @@ const Login: React.FC = () => {
               </Button>
             </Stack>
           </form>
-        )}
+        ) : null}
       </div>
     </div>
   );

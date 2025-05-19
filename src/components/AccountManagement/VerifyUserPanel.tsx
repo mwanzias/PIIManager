@@ -15,6 +15,7 @@ import {
   Warning24Regular,
 } from "@fluentui/react-icons";
 import VerifyDetails from "./VerifyDetails";
+import MFASetup from "./MFASetup";
 
 const useStyles = makeStyles({
   // Container styles
@@ -79,7 +80,7 @@ interface VerifyUserPanelProps {
   emailVerified: boolean;
   phoneNumber: number;
   phoneVerified: boolean;
-  onVerify: (type: "email" | "phone") => void;
+  onVerify: (type: "email" | "phone" | "mfa") => void;
 }
 
 const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
@@ -92,6 +93,7 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
   const styles = useStyles();
   const [emailStatus, setEmailStatus] = useState(emailVerified);
   const [phoneStatus, setPhoneStatus] = useState(phoneVerified);
+  const [showMFASetup, setShowMFASetup] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -100,6 +102,13 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
     }, 3000);
     return () => clearInterval(interval);
   }, [emailVerified, phoneVerified]);
+
+  useEffect(() => {
+    // Show MFA setup when both email and phone are verified
+    if (emailStatus && phoneStatus) {
+      setShowMFASetup(true);
+    }
+  }, [emailStatus, phoneStatus]);
 
   const [startEmailVerification, setStartEmailVerification] = useState(false);
   const [startPhoneVerification, setStartPhoneVerification] = useState(false);
@@ -122,6 +131,14 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
     }
   };
 
+  const handleMFASetupComplete = (preferredMethod: "email" | "phone") => {
+    console.log(`MFA setup complete. Preferred method: ${preferredMethod}`);
+    // In a real app, you would save this preference to the user's profile
+    setShowMFASetup(false);
+    // Notify parent component that verification is complete
+    onVerify("mfa");
+  };
+
   const handlePhoneVerification = () => {
     setStartPhoneVerification(true);
   };
@@ -137,7 +154,14 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
           }
         />
 
-        <div className={styles.cardContent} style={{ display: "flex", flexDirection: "column", gap: tokens.spacingVerticalL }}>
+        <div
+          className={styles.cardContent}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: tokens.spacingVerticalL,
+          }}
+        >
           <div className={styles.verificationRow}>
             <Text className={styles.label}>Email:</Text>
             <Text className={styles.valueContainer}>{emailAddress}</Text>
@@ -166,7 +190,7 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
               </Button>
             </div>
           </div>
-          
+
           <Divider />
 
           <div className={styles.verificationRow}>
@@ -209,6 +233,13 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
           <VerifyDetails
             onDataCollection={handleVerificationCode}
             toVerify="phone"
+          />
+        )}
+        {showMFASetup && (
+          <MFASetup
+            emailAddress={emailAddress}
+            phoneNumber={phoneNumber.toString()}
+            onComplete={handleMFASetupComplete}
           />
         )}
       </div>

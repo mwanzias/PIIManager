@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@fluentui/react-button";
 import { Edit24Regular } from "@fluentui/react-icons";
 import { Badge } from "@fluentui/react-badge";
+import { colors } from "../../styling/theme";
 import {
   createTableColumn,
   DataGrid,
@@ -216,7 +217,7 @@ const AllowedCompanies: React.FC = () => {
         <DataGridHeader>
           <DataGridRow
             style={{
-              backgroundColor: "#e6f4ff", // light blue shade
+              backgroundColor: colors.primaryLight, // light blue shade
               textAlign: "center",
             }}
             selectionCell={{
@@ -227,7 +228,7 @@ const AllowedCompanies: React.FC = () => {
               <DataGridHeaderCell
                 style={{
                   fontWeight: "bold",
-                  color: "#0078d4",
+                  color: colors.primary,
                 }}
               >
                 {renderHeaderCell()}

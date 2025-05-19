@@ -10,6 +10,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
+import { colors } from "../styling/theme";
 
 const SignupForm: React.FC = () => {
   const [idNumber, setIdNumber] = useState<string>("");
@@ -163,18 +164,6 @@ const SignupForm: React.FC = () => {
     <>
       {!showOtpVerification ? (
         <>
-          <p>
-            The sign up proces requiresa your Id Number, phone number, email
-            Address as they are the protected data subjects. More data can be
-            mapped once one is logged in.{" "}
-            <Link
-              href="https://www.youtube.com/watch?v=iP0TusLTw40&list=RDiP0TusLTw40&start_radio=1"
-              target="_blank"
-            >
-              {" "}
-              Introductory video{" "}
-            </Link>
-          </p>
           <div>
             <form onSubmit={handleSignup}>
               <Stack tokens={{ childrenGap: 20 }}>
@@ -211,10 +200,12 @@ const SignupForm: React.FC = () => {
                 />
                 <div style={{ alignContent: "center", width: "100%" }}>
                   {isError && (
-                    <p style={{ color: "red", fontSize: 12 }}>{errorMessage}</p>
+                    <p style={{ color: colors.error, fontSize: 12 }}>
+                      {errorMessage}
+                    </p>
                   )}
                   {isSuccess && (
-                    <p style={{ color: "green", fontSize: 12 }}>
+                    <p style={{ color: colors.secondary, fontSize: 12 }}>
                       {successMessage}
                     </p>
                   )}
@@ -266,10 +257,14 @@ const SignupForm: React.FC = () => {
               required
             />
             {isError && (
-              <p style={{ color: "red", fontSize: 12 }}>{errorMessage}</p>
+              <p style={{ color: colors.error, fontSize: 12 }}>
+                {errorMessage}
+              </p>
             )}
             {isSuccess && (
-              <p style={{ color: "green", fontSize: 12 }}>{successMessage}</p>
+              <p style={{ color: colors.secondary, fontSize: 12 }}>
+                {successMessage}
+              </p>
             )}
             <PrimaryButton type="submit" text="Verify" />
             <Button

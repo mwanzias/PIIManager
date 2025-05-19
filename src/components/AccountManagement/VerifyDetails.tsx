@@ -61,7 +61,9 @@ const VerifyDetails: React.FC<VerificationCompleteProps> = ({
         <CardHeader
           header={
             <Text size={500} weight="semibold">
-              {toVerify === "email" ? "Email Verification" : "Phone Verification"}
+              {toVerify === "email"
+                ? "Email Verification"
+                : "Phone Verification"}
             </Text>
           }
         />
@@ -69,25 +71,38 @@ const VerifyDetails: React.FC<VerificationCompleteProps> = ({
           <div className={styles.infoBox}>
             <Text>
               <Info24Regular className={styles.infoIcon} />
+              <Text
+                weight="semibold"
+                as="span"
+                style={{ color: tokens.colorBrandForeground1 }}
+              >
+                Important: You need to verify your{" "}
+                {toVerify === "email" ? "email address" : "phone number"} before
+                you can use the Pseudo Identity service.
+              </Text>
+              <br />
+              <br />
               {toVerify === "email" ? (
                 <>
                   We have sent a verification email to your registered email
                   address. Please check your inbox and click on the verification
                   link to confirm your email address.
-                  <br /><br />
-                  If you do not receive the email within a few minutes, please check
-                  your spam or junk folder. If you still do not see it, you can
-                  request a new verification email.
+                  <br />
+                  <br />
+                  If you do not receive the email within a few minutes, please
+                  check your spam or junk folder. If you still do not see it,
+                  you can request a new verification email.
                 </>
               ) : (
                 <>
-                  We have sent a verification code to your registered phone number.
-                  Please check your SMS and enter the code below to confirm your
-                  phone number.
-                  <br /><br />
-                  If you do not receive the SMS within a few minutes, please check
-                  your network connection. If you still do not see it, you can
-                  request a new verification code.
+                  We have sent a verification code to your registered phone
+                  number. Please check your SMS and enter the code below to
+                  confirm your phone number.
+                  <br />
+                  <br />
+                  If you do not receive the SMS within a few minutes, please
+                  check your network connection. If you still do not see it, you
+                  can request a new verification code.
                 </>
               )}
             </Text>
@@ -110,7 +125,7 @@ const VerifyDetails: React.FC<VerificationCompleteProps> = ({
           </div>
 
           <div className={styles.buttonSection}>
-            <Button 
+            <Button
               appearance="primary"
               onClick={() => onDataCollection(verificationCode, toVerify)}
               disabled={!verificationCode.trim()}

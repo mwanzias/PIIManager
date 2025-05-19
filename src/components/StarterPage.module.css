@@ -1,0 +1,45 @@
+/* StarterPage.module.css */
+
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Add a class for alternating section backgrounds */
+.alt-background {
+  background-color: #f5f5f5;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .stepsContainer,
+  .comparisonContainer {
+    flex-direction: column;
+  }
+
+  .step,
+  .comparisonCard {
+    margin-bottom: 20px;
+  }
+
+  .heroContent {
+    padding: 40px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .headline {
+    font-size: 32px;
+  }
+
+  .subheadline {
+    font-size: 18px;
+  }
+
+  .sectionTitle {
+    font-size: 28px;
+  }
+}

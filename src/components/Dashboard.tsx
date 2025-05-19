@@ -14,6 +14,7 @@ import {
   List24Filled,
   SignOut24Filled,
 } from "@fluentui/react-icons";
+import { colors } from "../styling/theme";
 import DeleteAccount from "./AccountManagement/DeleteAccount";
 import SuspentAccount from "./AccountManagement/SuspendAccount";
 import CompaniesUnassigned from "./DataAccess/CompaniesUnassigned";
@@ -53,6 +54,11 @@ const submenuStyle: React.CSSProperties = {
   flexDirection: "column",
   gap: "8px",
 };
+
+const activeColor = colors.primary;
+const headerBgColor = colors.primary;
+const sidebarBgColor = colors.gray20;
+const footerBgColor = colors.gray20;
 
 const Dashboard: React.FC = () => {
   const { user, signOut, isAuthenticated, updateUser } = useAuth();
@@ -221,6 +227,10 @@ const Dashboard: React.FC = () => {
       setPhoneVerified(true);
     } else if (toVerify === "email") {
       setEmailVerified(true);
+    } else if (toVerify === "mfa") {
+      // MFA setup is complete, user is fully verified
+      setUserVerified(true);
+      setActiveView("allowed-companies");
     }
     console.log("User verified:", toVerify);
     console.log("Verification Status:", userVerified);
@@ -243,7 +253,7 @@ const Dashboard: React.FC = () => {
         padding: "6px 10px",
         fontSize: "0.95em",
         fontWeight: isActive ? "bold" : "normal",
-        color: isActive ? "#0078d4" : "inherit",
+        color: isActive ? activeColor : "inherit",
       }}
     >
       <List24Filled style={{ marginRight: 8 }} /> {label}
@@ -267,7 +277,7 @@ const Dashboard: React.FC = () => {
             top: "10px",
             left: "10px",
             zIndex: 1001,
-            background: sidebarOpen ? "transparent" : "#0078d4",
+            background: sidebarOpen ? "transparent" : headerBgColor,
             border: "none",
             borderRadius: "50%",
             width: "40px",
@@ -305,7 +315,7 @@ const Dashboard: React.FC = () => {
         <div
           style={{
             width: sidebarOpen ? (isMobile ? "250px" : "200px") : "60px",
-            backgroundColor: "#f3f3f3",
+            backgroundColor: sidebarBgColor,
             position: isMobile && sidebarOpen ? "fixed" : "relative",
             height: isMobile && sidebarOpen ? "100vh" : "auto",
             zIndex: isMobile && sidebarOpen ? 1000 : 1,
@@ -341,7 +351,7 @@ const Dashboard: React.FC = () => {
                 ...buttonStyle,
                 opacity: userVerified ? 1 : 0.5,
                 fontWeight: showDataAccess ? "bold" : "normal",
-                color: showDataAccess ? "#0078d4" : "inherit",
+                color: showDataAccess ? activeColor : "inherit",
               }}
             >
               <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
@@ -371,7 +381,7 @@ const Dashboard: React.FC = () => {
                 ...buttonStyle,
                 opacity: userVerified ? 1 : 0.5,
                 fontWeight: showAccountMgmt ? "bold" : "normal",
-                color: showAccountMgmt ? "#0078d4" : "inherit",
+                color: showAccountMgmt ? activeColor : "inherit",
               }}
             >
               <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
@@ -400,7 +410,8 @@ const Dashboard: React.FC = () => {
                 ...buttonStyle,
                 opacity: userVerified ? 1 : 0.5,
                 fontWeight: activeView === "refer-a-friend" ? "bold" : "normal",
-                color: activeView === "refer-a-friend" ? "#0078d4" : "inherit",
+                color:
+                  activeView === "refer-a-friend" ? activeColor : "inherit",
               }}
             >
               <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
@@ -435,7 +446,7 @@ const Dashboard: React.FC = () => {
           <div
             style={{
               width: "100%",
-              backgroundColor: "#0078d4",
+              backgroundColor: headerBgColor,
               color: "white",
               padding: isMobile ? "10px" : "10px 20px",
               display: "flex",
@@ -516,7 +527,7 @@ const Dashboard: React.FC = () => {
       {isAuthenticated && (
         <div
           style={{
-            backgroundColor: "#f3f3f3",
+            backgroundColor: footerBgColor,
             padding: "10px 20px",
             borderTop: "1px solid #e0e0e0",
           }}
