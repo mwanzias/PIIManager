@@ -25,6 +25,7 @@ import {
   colors,
   listItemStyles,
 } from "../styling/theme";
+import Pricing from "./Pricing";
 
 // Step container styles (specific to this component)
 const stepContainerStyles = {
@@ -94,6 +95,56 @@ const horizontalStackTokens: IStackTokens = {
   childrenGap: 24,
 };
 
+const signInSectionStyles = {
+  root: {
+    marginTop: "24px",
+    padding: "16px",
+    borderTop: `1px solid ${colors.gray20}`,
+    width: "100%",
+    maxWidth: "400px",
+  },
+};
+
+const stylishButtonStyles = {
+  root: {
+    borderRadius: "25px",
+    padding: "8px 24px",
+    height: "44px",
+    transition: "all 0.3s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    },
+  },
+};
+
+const stylishPrimaryButtonStyles = {
+  ...primaryButtonStyles,
+  root: {
+    ...primaryButtonStyles.root,
+    ...stylishButtonStyles.root,
+    backgroundColor: colors.primary,
+    border: "none",
+    "&:hover": {
+      ...stylishButtonStyles.root["&:hover"],
+      backgroundColor: colors.primaryDark,
+    },
+  },
+};
+
+const stylishOutlineButtonStyles = {
+  ...outlineButtonStyles,
+  root: {
+    ...outlineButtonStyles.root,
+    ...stylishButtonStyles.root,
+    border: `2px solid ${colors.primary}`,
+    "&:hover": {
+      ...stylishButtonStyles.root["&:hover"],
+      backgroundColor: colors.primaryLight,
+    },
+  },
+};
+
 const StarterPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -107,6 +158,13 @@ const StarterPage: React.FC = () => {
     const narrativeSection = document.getElementById("narrative-section");
     if (narrativeSection) {
       narrativeSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handlePricingClick = () => {
+    const pricingSection = document.getElementById("pricing-section");
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -126,12 +184,30 @@ const StarterPage: React.FC = () => {
             <PrimaryButton
               text="Get Started"
               onClick={handleGetStarted}
-              styles={primaryButtonStyles}
+              styles={stylishPrimaryButtonStyles}
             />
+            <DefaultButton
+              text="Pricing"
+              onClick={handlePricingClick}
+              styles={stylishOutlineButtonStyles}
+            />
+          </Stack>
+
+          {/* Sign In Section */}
+          <Stack styles={signInSectionStyles} horizontalAlign="center">
+            <Text styles={{ root: { color: colors.gray130, marginBottom: "12px" } }}>
+              Already have an account?
+            </Text>
             <DefaultButton
               text="Sign In"
               onClick={() => navigate("/login")}
-              styles={outlineButtonStyles}
+              styles={{
+                ...stylishOutlineButtonStyles,
+                root: {
+                  ...stylishOutlineButtonStyles.root,
+                  minWidth: "200px",
+                },
+              }}
             />
           </Stack>
         </Stack>
@@ -324,6 +400,11 @@ const StarterPage: React.FC = () => {
         </Stack>
       </Stack>
 
+      {/* Pricing Section */}
+      <div id="pricing-section">
+        <Pricing />
+      </div>
+
       {/* Footer CTA */}
       <Stack styles={footerCTAStyles} horizontalAlign="center">
         <Stack
@@ -341,12 +422,12 @@ const StarterPage: React.FC = () => {
             <PrimaryButton
               text="Sign Up Now"
               onClick={handleGetStarted}
-              styles={primaryButtonStyles}
+              styles={stylishPrimaryButtonStyles}
             />
             <DefaultButton
               text="Learn More"
               onClick={handleLearnMore}
-              styles={outlineButtonStyles}
+              styles={stylishOutlineButtonStyles}
             />
           </Stack>
         </Stack>
