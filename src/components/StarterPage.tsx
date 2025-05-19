@@ -266,7 +266,7 @@ const StarterPage: React.FC = () => {
               </Text>
               <Text>
                 Present your pseudo-number to any participating business (e.g.,
-                parking), receive a one-time OTP, and get verified — without
+                parking, entering buildings, supermarkets, healthcare providers, etc.), receive a one-time OTP, and get verified — without
                 exposing your real data.
               </Text>
             </Stack>
