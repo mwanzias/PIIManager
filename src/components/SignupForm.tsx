@@ -36,7 +36,7 @@ const SignupForm: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/login");
     }
   }, [isAuthenticated, navigate]);
 
@@ -71,8 +71,10 @@ const SignupForm: React.FC = () => {
         id: "user_" + Date.now(),
         idNumber: "", // Empty as this will be collected later
         email: otpEmail,
-        phoneNumber: "", // Empty as this will be collected later
+        phone_number: "", // Empty as this will be collected later
         socialLogin: socialLoginType, // Add social login type to user data
+        isPhoneVerified: false,
+        isEmailVerified: false,
       };
 
       setIsSuccess(true);
@@ -84,7 +86,7 @@ const SignupForm: React.FC = () => {
 
       // Redirect to dashboard after a longer delay to allow user to read the message
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/login");
       }, 5000);
     } catch (error) {
       console.error("OTP verification failed!", error);
@@ -133,35 +135,19 @@ const SignupForm: React.FC = () => {
           id: userData.id || "user_" + Date.now(),
           idNumber,
           email,
-          phoneNumber,
+          phone_number: phoneNumber,
+          isPhoneVerified: false,
+          isEmailVerified: false,
         });
 
         // Redirect to dashboard after a longer delay to allow user to read the message
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/login");
         }, 5000);
       } else {
         console.error("Signup failed!");
         setIsError(true);
         setErrorMessage("Signup failed. Please try again.");
-
-        // For development/demo purposes only - remove in production
-        // This simulates a successful signup with mock data
-        setIsSuccess(true);
-        setSuccessMessage(
-          "Signup successful! Please check your email for verification instructions."
-        );
-
-        signIn({
-          id: "user_" + Date.now(),
-          idNumber,
-          email,
-          phoneNumber,
-        });
-
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 5000);
       }
     } catch (error) {
       console.error("Error during signup:", error);

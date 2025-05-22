@@ -25,16 +25,23 @@ const Login: React.FC = () => {
   const [socialLoginType, setSocialLoginType] = useState<string>("");
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+
+  // use to set email and phone verified states
+  const [isPhoneVerified, setIsPhoneVerified] = useState<boolean>(false);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+
   const [tempUserData, setTempUserData] = useState<any>(null);
+
   const navigate = useNavigate();
   const { signIn, isAuthenticated } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
+      // Navigate to dashboard without parameters in URL
       navigate("/dashboard");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, isEmailVerified, isPhoneVerified]);
 
   // Handle OTP verification
   const handleOtpVerification = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -50,16 +57,22 @@ const Login: React.FC = () => {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Mock user data based on social login
-      const mockUser = {
-        id: "user_" + Date.now(),
-        idNumber: "", // Empty as this will be collected later
+      // Create a mock user object for social login
+      const mockUserData = {
+        id: `social-${Date.now()}`,
+        idNumber: "",
         email: otpEmail,
-        phoneNumber: "", // Empty as this will be collected later
-        socialLogin: socialLoginType, // Add social login type to user data
+        phone_number: "",
+        socialLogin: socialLoginType,
+        isEmailVerified: true,
+        isPhoneVerified: false,
+        imageUrl: socialLoginType === "google" ? "/logo192.png" : undefined,
       };
 
-      signIn(mockUser);
+      // Sign in the user
+      signIn(mockUserData);
+
+      // Navigate to dashboard without parameters in URL
       navigate("/dashboard");
     } catch (error) {
       console.error("OTP verification failed!", error);
@@ -73,14 +86,24 @@ const Login: React.FC = () => {
     setIsLoggingIn(true);
 
     try {
-      const response = await axios.post(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.login}`, { 
-        username: identifier, // Using identifier as username (email or phone)
-        password 
-      });
+      const response = await axios.post(
+        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.login}`,
+        {
+          username: identifier, // Using identifier as username (email or phone)
+          password,
+        }
+      );
+      setIsEmailVerified(response.data.is_email_verified || false);
+      setIsPhoneVerified(response.data.is_phone_verified || false);
 
-      if (response.data && response.data.user) {
-        const userData = response.data.user;
-        
+      if (response.data) {
+        // Add verification status to user data
+        const userData = {
+          ...response.data,
+          isEmailVerified: response.data.is_email_verified || false,
+          isPhoneVerified: response.data.is_phone_verified || false,
+        };
+
         // Check if MFA is enabled for this user
         if (response.data.mfaRequired) {
           setTempUserData(userData);
@@ -88,28 +111,19 @@ const Login: React.FC = () => {
         } else {
           // No MFA required, proceed with login
           signIn(userData);
+          // Navigate to dashboard without parameters in URL
           navigate("/dashboard");
         }
       } else {
         throw new Error("Invalid response format");
       }
-      
+
       setIsLoggingIn(false);
     } catch (error) {
       console.error("Login failed!", error);
-      setIsLoggingIn(false);
       setError("Login failed. Please check your credentials.");
-
-      // For development/demo purposes only - remove in production
-      // This simulates a successful login with mock data
-      setTempUserData({
-        id: "user123",
-        idNumber: "22186940",
-        email: identifier.includes("@") ? identifier : "user@example.com",
-        phoneNumber: identifier.includes("@") ? "254721803652" : identifier,
-      });
-      setShowMfaVerification(true);
-      setIsLoggingIn(false);
+      setShowMfaVerification(false);
+      setIsLoggingIn(true);
     }
   };
 
@@ -139,6 +153,8 @@ const Login: React.FC = () => {
       setIsVerifying(false);
       // Use the AuthContext signIn function
       signIn(tempUserData);
+
+      // Navigate to dashboard without parameters in URL
       navigate("/dashboard");
     }, 2000);
   };

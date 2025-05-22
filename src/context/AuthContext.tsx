@@ -6,9 +6,11 @@ interface User {
   id: string;
   idNumber: string;
   email: string;
-  phoneNumber: string;
+  phone_number: string;
   imageUrl?: string;
   socialLogin?: string; // Track if user signed in via Google or Microsoft
+  isPhoneVerified: boolean;
+  isEmailVerified: boolean;
 }
 
 // Authentication context interface

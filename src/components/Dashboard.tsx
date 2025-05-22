@@ -7,7 +7,7 @@ import {
   IContextualMenuProps,
   ContextualMenu,
 } from "@fluentui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronLeft24Filled,
   ChevronRight24Filled,
@@ -61,7 +61,7 @@ const sidebarBgColor = colors.gray20;
 const footerBgColor = colors.gray20;
 
 const Dashboard: React.FC = () => {
-  const { user, signOut, isAuthenticated, updateUser } = useAuth();
+  const { user, signOut, isAuthenticated } = useAuth();
   const [allowedCompanies, setAllowedCompanies] = useState<Company[]>([]);
   const [menuProps, setMenuProps] = useState<IContextualMenuProps | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -71,18 +71,25 @@ const Dashboard: React.FC = () => {
   const [profileMenuProps, setProfileMenuProps] =
     useState<IContextualMenuProps | null>(null);
   const [userVerified, setUserVerified] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  // Initialize verification status
+  const [phoneVerified, setPhoneVerified] = useState<boolean>(
+    user?.isPhoneVerified === true
+  );
+  const [emailVerified, setEmailVerified] = useState<boolean>(
+    user?.isEmailVerified === true
+  );
+
   const [needsSocialLoginInfo, setNeedsSocialLoginInfo] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const userDetails: accountManagementProps = {
-    idnumber: user?.idNumber || "22186940",
-    emailAddress: user?.email || "mwanzias@gmail.com",
-    phoneNumber: parseInt(user?.phoneNumber || "254721803652"),
+    idnumber: user?.idNumber || "",
+    emailAddress: user?.email || "",
+    phoneNumber: parseInt(user?.phone_number || "0"),
   };
 
+  console.log("These are the user details from AUTH", user);
   const navigate = useNavigate();
 
   // Handle window resize for responsive layout
@@ -208,7 +215,7 @@ const Dashboard: React.FC = () => {
 
   // Check if user signed in via social login and needs to provide additional info
   useEffect(() => {
-    if (user?.socialLogin && (!user.idNumber || !user.phoneNumber)) {
+    if (user?.socialLogin && (!user.idNumber || !user.phone_number)) {
       setNeedsSocialLoginInfo(true);
     } else {
       setNeedsSocialLoginInfo(false);
@@ -512,8 +519,8 @@ const Dashboard: React.FC = () => {
               </>
             ) : (
               <VerifyUserPanel
-                emailAddress={user?.email || "mwanzias@gmail.com"}
-                phoneNumber={parseInt(user?.phoneNumber || "254721803652")}
+                emailAddress={user?.email || ""}
+                phoneNumber={parseInt(user?.phone_number || "")}
                 phoneVerified={phoneVerified}
                 emailVerified={emailVerified}
                 onVerify={handleuserVerification}

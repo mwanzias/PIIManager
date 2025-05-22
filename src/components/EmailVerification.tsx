@@ -110,6 +110,10 @@ const EmailVerification: React.FC = () => {
 
         if (response.ok) {
           setVerificationStatus("success");
+          // Redirect to dashboard after a short delay
+          setTimeout(() => {
+            handleNavigateToDashboard();
+          }, 2000);
         } else {
           const errorData = await response.json();
           setVerificationStatus("error");
@@ -146,6 +150,10 @@ const EmailVerification: React.FC = () => {
 
       if (response.ok) {
         setVerificationStatus("success");
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          handleNavigateToDashboard();
+        }, 2000);
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.detail || "OTP verification failed.");
@@ -162,8 +170,9 @@ const EmailVerification: React.FC = () => {
     setVerificationStatus("otp_input");
   };
 
-  const handleNavigateToLogin = () => {
-    navigate("/login");
+  const handleNavigateToDashboard = () => {
+    const emailVerificationState = verificationStatus === "success";
+    navigate(`/dashboard/${emailVerificationState}`);
   };
 
   const handleNavigateToHome = () => {
@@ -199,12 +208,15 @@ const EmailVerification: React.FC = () => {
                 Email Verified Successfully!
               </Text>
               <Text className={styles.message}>
-                Your email has been successfully verified. You can now log in to
-                your account.
+                Your email has been successfully verified. You will be
+                redirected to your dashboard in a moment.
               </Text>
               <div className={styles.buttonContainer}>
-                <Button appearance="primary" onClick={handleNavigateToLogin}>
-                  Go to Login
+                <Button
+                  appearance="primary"
+                  onClick={handleNavigateToDashboard}
+                >
+                  Go to Dashboard
                 </Button>
               </div>
             </>

@@ -43,7 +43,7 @@ const SocialLoginUserInfo: React.FC<SocialLoginUserInfoProps> = ({
       // For now, we'll just update the user in the context
       updateUser({
         idNumber,
-        phoneNumber,
+        phone_number: phoneNumber,
       });
 
       setSuccess(true);
