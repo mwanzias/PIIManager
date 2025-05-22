@@ -119,16 +119,18 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
   const handleEmailVerification = async () => {
     try {
       // Send a request to the backend to generate a verification token and send an email
+      // Pass email as a query parameter instead of in the request body
       const response = await fetch(
-        `${API_CONFIG.baseUrl}/auth/resend-email-verification`,
+        `${
+          API_CONFIG.baseUrl
+        }/auth/resend-email-verification?email=${encodeURIComponent(
+          emailAddress
+        )}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email: emailAddress,
-          }),
         }
       );
 
@@ -152,15 +154,74 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
     setStartEmailVerification(true);
   };
 
-  const handleVerificationCode = (code: string, toVerify: string) => {
-    if (startEmailVerification) {
-      setEmailVerificationCode(code);
-      onVerify("email");
-      setStartEmailVerification(false);
-    } else if (startPhoneVerification) {
-      setPhoneVerificationCode(code);
-      onVerify("phone");
-      setStartPhoneVerification(false);
+  const handleVerificationCode = async (code: string, toVerify: string) => {
+    try {
+      if (startEmailVerification) {
+        setEmailVerificationCode(code);
+
+        // Send a request to the backend to verify the email with the code
+        // Pass email as a query parameter instead of in the request body
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}${
+            API_CONFIG.endpoints.emailverify
+          }?email=${encodeURIComponent(emailAddress)}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              otp: code,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          alert("Email verified successfully!");
+          onVerify("email");
+        } else {
+          const errorData = await response.json();
+          alert(
+            `Failed to verify email: ${errorData.detail || "Invalid code"}`
+          );
+        }
+
+        setStartEmailVerification(false);
+      } else if (startPhoneVerification) {
+        setPhoneVerificationCode(code);
+
+        // Send a request to the backend to verify the phone with the code
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.phoneverify}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              phone_number: phoneNumber.toString(),
+              otp: code,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          alert("Phone number verified successfully!");
+          onVerify("phone");
+        } else {
+          const errorData = await response.json();
+          alert(
+            `Failed to verify phone number: ${
+              errorData.detail || "Invalid code"
+            }`
+          );
+        }
+
+        setStartPhoneVerification(false);
+      }
+    } catch (error) {
+      console.error("Error verifying code:", error);
+      alert("Failed to verify code. Please try again later.");
     }
   };
 
@@ -172,8 +233,39 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
     onVerify("mfa");
   };
 
-  const handlePhoneVerification = () => {
-    setStartPhoneVerification(true);
+  const handlePhoneVerification = async () => {
+    try {
+      // Send a request to the backend to generate a verification code and send an SMS
+      // Pass phone_number as a query parameter instead of in the request body
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}${
+          API_CONFIG.endpoints.resendPhoneVerification
+        }?phone_number=${phoneNumber.toString()}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        alert(
+          "Verification code sent. Please check your phone and enter the code."
+        );
+        setStartPhoneVerification(true);
+      } else {
+        const errorData = await response.json();
+        alert(
+          `Failed to send verification code: ${
+            errorData.detail || "Unknown error"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Error sending verification code:", error);
+      alert("Failed to send verification code. Please try again later.");
+    }
   };
 
   return (

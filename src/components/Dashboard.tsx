@@ -61,7 +61,7 @@ const sidebarBgColor = colors.gray20;
 const footerBgColor = colors.gray20;
 
 const Dashboard: React.FC = () => {
-  const { user, signOut, isAuthenticated } = useAuth();
+  const { user, signOut, isAuthenticated, updateUser } = useAuth();
   const [allowedCompanies, setAllowedCompanies] = useState<Company[]>([]);
   const [menuProps, setMenuProps] = useState<IContextualMenuProps | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -232,8 +232,12 @@ const Dashboard: React.FC = () => {
   const handleuserVerification = (toVerify: string) => {
     if (toVerify === "phone") {
       setPhoneVerified(true);
+      // Update the user object in AuthContext
+      updateUser({ isPhoneVerified: true });
     } else if (toVerify === "email") {
       setEmailVerified(true);
+      // Update the user object in AuthContext
+      updateUser({ isEmailVerified: true });
     } else if (toVerify === "mfa") {
       // MFA setup is complete, user is fully verified
       setUserVerified(true);
