@@ -14,6 +14,7 @@ import AccountDeletedBanner from "./components/AccountManagement/AccountDeletedM
 import { useAuth } from "./context/AuthContext";
 import TestimonialModeration from "./components/TestimonialModeration";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EmailVerification from "./components/EmailVerification";
 
 // Protected route component
 const ProtectedRouteComponent: React.FC<{ element: React.ReactElement }> = ({
@@ -36,6 +37,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/deleted" element={<AccountDeletedBanner />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
         <Route
           path="/dashboard"
           element={<ProtectedRouteComponent element={<Dashboard />} />}

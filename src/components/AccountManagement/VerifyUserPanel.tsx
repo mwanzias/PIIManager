@@ -16,6 +16,7 @@ import {
 } from "@fluentui/react-icons";
 import VerifyDetails from "./VerifyDetails";
 import MFASetup from "./MFASetup";
+import API_CONFIG from "../../config/api";
 
 const useStyles = makeStyles({
   // Container styles
@@ -115,7 +116,39 @@ const VerifyUserPanel: React.FC<VerifyUserPanelProps> = ({
   const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [phoneVerificationCode, setPhoneVerificationCode] = useState("");
 
-  const handleEmailVerification = () => {
+  const handleEmailVerification = async () => {
+    try {
+      // Send a request to the backend to generate a verification token and send an email
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/auth/resend-email-verification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: emailAddress,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        alert(
+          "Verification email sent. Please check your inbox and click the verification link."
+        );
+      } else {
+        const errorData = await response.json();
+        alert(
+          `Failed to send verification email: ${
+            errorData.detail || "Unknown error"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      alert("Failed to send verification email. Please try again later.");
+    }
+
     setStartEmailVerification(true);
   };
 

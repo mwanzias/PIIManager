@@ -76,14 +76,16 @@ const SignupForm: React.FC = () => {
       };
 
       setIsSuccess(true);
-      setSuccessMessage("Signup successful! Redirecting to dashboard...");
+      setSuccessMessage(
+        "Signup successful! Please check your email for verification instructions."
+      );
 
       signIn(mockUser);
 
-      // Redirect to dashboard after a short delay
+      // Redirect to dashboard after a longer delay to allow user to read the message
       setTimeout(() => {
         navigate("/dashboard");
-      }, 1500);
+      }, 5000);
     } catch (error) {
       console.error("OTP verification failed!", error);
       setIsError(true);
@@ -103,23 +105,28 @@ const SignupForm: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.signup}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          idNumber,
-          email,
-          phoneNumber,
-          password,
-        }),
-      });
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.signup}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            id_number: idNumber,
+            phone_number: phoneNumber,
+            password: password,
+          }),
+        }
+      );
 
       if (response.ok) {
         const userData = await response.json();
         setIsSuccess(true);
-        setSuccessMessage("Signup successful! Redirecting to dashboard...");
+        setSuccessMessage(
+          "Signup successful! Please check your email for verification instructions."
+        );
 
         // Use AuthContext to sign in the user
         signIn({
@@ -129,10 +136,10 @@ const SignupForm: React.FC = () => {
           phoneNumber,
         });
 
-        // Redirect to dashboard after a short delay
+        // Redirect to dashboard after a longer delay to allow user to read the message
         setTimeout(() => {
           navigate("/dashboard");
-        }, 1500);
+        }, 5000);
       } else {
         console.error("Signup failed!");
         setIsError(true);
@@ -141,7 +148,9 @@ const SignupForm: React.FC = () => {
         // For development/demo purposes only - remove in production
         // This simulates a successful signup with mock data
         setIsSuccess(true);
-        setSuccessMessage("Signup successful! Redirecting to dashboard...");
+        setSuccessMessage(
+          "Signup successful! Please check your email for verification instructions."
+        );
 
         signIn({
           id: "user_" + Date.now(),
@@ -152,7 +161,7 @@ const SignupForm: React.FC = () => {
 
         setTimeout(() => {
           navigate("/dashboard");
-        }, 1500);
+        }, 5000);
       }
     } catch (error) {
       console.error("Error during signup:", error);
