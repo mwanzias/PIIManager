@@ -167,37 +167,38 @@ const Login: React.FC = () => {
               requestId
             );
 
-            // Sign in the user with the response from the backend
-            const userData = {
-              id: loginResponse.user_id,
-              idNumber: "",
-              email: loginResponse.email || userEmail,
-              phone_number: "",
-              socialLogin: "microsoft",
-              isEmailVerified: true, // Mark email as verified for Microsoft login
-              isPhoneVerified: false,
-              token: loginResponse.access_token,
-            };
+            if (loginResponse.is_new_user) {
+              // This is a new user, we need to collect additional information
+              // Store the email and token in session storage temporarily
+              sessionStorage.setItem("socialLoginEmail", loginResponse.email);
+              sessionStorage.setItem("socialLoginProvider", "microsoft");
+              sessionStorage.setItem(
+                "socialLoginToken",
+                loginResponse.access_token
+              );
+              sessionStorage.setItem("isNewSocialUser", "true");
 
-            signIn(userData);
-            navigate("/dashboard"); // Dashboard will show SocialLoginUserInfo for additional info
+              // Navigate to a page where the user can provide additional information
+              navigate("/dashboard"); // Dashboard will show SocialLoginUserInfo for new users
+            } else {
+              // This is an existing user, sign them in
+              const userData = {
+                id: loginResponse.user_id,
+                idNumber: loginResponse.id_number || "",
+                email: loginResponse.email || userEmail,
+                phone_number: loginResponse.phone_number || "",
+                socialLogin: "microsoft",
+                isEmailVerified: true, // Mark email as verified for Microsoft login
+                isPhoneVerified: false, // Phone verification status should come from backend
+                token: loginResponse.access_token,
+              };
+
+              signIn(userData);
+              navigate("/dashboard"); // Dashboard will show normal view for existing users
+            }
           } catch (submitError: any) {
             console.error("Social login submission failed:", submitError);
-
-            // Check if the error is due to user not being registered
-            if (
-              submitError.response &&
-              submitError.response.status === 400 &&
-              submitError.response.data &&
-              submitError.response.data.detail &&
-              submitError.response.data.detail.includes("User not registered")
-            ) {
-              setError(
-                `Account not found. You need to sign up first before logging in with Microsoft.`
-              );
-            } else {
-              setError(`${provider} login failed. Please try again.`);
-            }
+            setError(`${provider} login failed. Please try again.`);
           }
         }
       } else {

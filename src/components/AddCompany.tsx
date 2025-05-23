@@ -91,10 +91,7 @@ const AddCompany: React.FC = () => {
         contactemail: "",
       });
 
-      // Redirect to companies list after a short delay
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
+      // No need to redirect since we're already in the dashboard
     } catch (err) {
       console.error("Error creating company:", err);
       setError(
@@ -133,7 +130,7 @@ const AddCompany: React.FC = () => {
           dismissButtonAriaLabel="Close"
           style={{ marginBottom: "20px" }}
         >
-          Company created successfully! Redirecting...
+          Company created successfully!
         </MessageBar>
       )}
 

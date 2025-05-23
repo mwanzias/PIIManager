@@ -11,6 +11,8 @@ interface User {
   socialLogin?: string; // Track if user signed in via Google or Microsoft
   isPhoneVerified: boolean;
   isEmailVerified: boolean;
+  token?: string; // Access token for API calls
+  pseudo_code?: string; // User's pseudo code
 }
 
 // Authentication context interface

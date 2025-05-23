@@ -143,6 +143,35 @@ export const submitSocialLogin = async (
   }
 };
 
+// Function to register a new social login user
+export const registerSocialUser = async (
+  email: string,
+  idNumber: string,
+  phoneNumber: string,
+  provider: string
+) => {
+  try {
+    // Submit to backend
+    const response = await axios.post(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.registerSocialUser}`,
+      null,
+      {
+        params: {
+          email,
+          id_number: idNumber,
+          phone_number: phoneNumber,
+          provider,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error registering social user:", error);
+    throw error;
+  }
+};
+
 // Function to handle Microsoft logout
 export const handleMsalLogout = async () => {
   try {

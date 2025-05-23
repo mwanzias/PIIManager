@@ -7,7 +7,7 @@ import {
   IContextualMenuProps,
   ContextualMenu,
 } from "@fluentui/react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   ChevronLeft24Filled,
   ChevronRight24Filled,
@@ -29,6 +29,7 @@ import { accountManagementProps } from "../Interfaces/PseudoInterfaces";
 import BillingManager from "./AccountManagement/BillingManager";
 import AppFooter from "../appFooter";
 import { useAuth } from "../context/AuthContext";
+import AddCompany from "./AddCompany";
 
 interface Company {
   id: string;
@@ -71,6 +72,7 @@ const Dashboard: React.FC = () => {
   const [profileMenuProps, setProfileMenuProps] =
     useState<IContextualMenuProps | null>(null);
   const [userVerified, setUserVerified] = useState(false);
+  const [searchParams] = useSearchParams();
 
   // Initialize verification status
   const [phoneVerified, setPhoneVerified] = useState<boolean>(
@@ -91,6 +93,19 @@ const Dashboard: React.FC = () => {
 
   console.log("These are the user details from AUTH", user);
   const navigate = useNavigate();
+
+  // Check for view parameter in URL
+  useEffect(() => {
+    const viewParam = searchParams.get("view");
+    if (viewParam && userVerified) {
+      setActiveView(viewParam);
+
+      // If the view is add-company, also highlight the appropriate sidebar button
+      if (viewParam === "add-company" && user?.socialLogin === "microsoft") {
+        // No need to set any additional state as the button is already styled based on activeView
+      }
+    }
+  }, [searchParams, userVerified, user?.socialLogin]);
 
   // Handle window resize for responsive layout
   useEffect(() => {
@@ -228,7 +243,18 @@ const Dashboard: React.FC = () => {
 
   // Check if user signed in via social login and needs to provide additional info
   useEffect(() => {
-    if (user?.socialLogin && (!user.idNumber || !user.phone_number)) {
+    // Check session storage for new social login user
+    const isNewSocialUser =
+      sessionStorage.getItem("isNewSocialUser") === "true";
+    const socialLoginEmail = sessionStorage.getItem("socialLoginEmail");
+    const socialLoginProvider = sessionStorage.getItem("socialLoginProvider");
+    const socialLoginToken = sessionStorage.getItem("socialLoginToken");
+
+    if (isNewSocialUser && socialLoginEmail && socialLoginProvider) {
+      // This is a new social login user that needs to complete their profile
+      setNeedsSocialLoginInfo(true);
+    } else if (user?.socialLogin && (!user.idNumber || !user.phone_number)) {
+      // Existing user with incomplete profile
       setNeedsSocialLoginInfo(true);
     } else {
       setNeedsSocialLoginInfo(false);
@@ -236,6 +262,12 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   const handleSocialLoginInfoComplete = () => {
+    // Clear session storage data
+    sessionStorage.removeItem("socialLoginEmail");
+    sessionStorage.removeItem("socialLoginProvider");
+    sessionStorage.removeItem("socialLoginToken");
+    sessionStorage.removeItem("isNewSocialUser");
+
     setNeedsSocialLoginInfo(false);
     // After completing the social login info, we can consider the user verified
     setUserVerified(true);
@@ -387,7 +419,7 @@ const Dashboard: React.FC = () => {
             {/* Add Company (Only visible for Azure AD users) */}
             {user?.socialLogin === "microsoft" && (
               <button
-                onClick={() => navigate("/add-company")}
+                onClick={() => setActiveView("add-company")}
                 style={{
                   ...buttonStyle,
                   fontWeight: activeView === "add-company" ? "bold" : "normal",
@@ -532,7 +564,14 @@ const Dashboard: React.FC = () => {
             }}
           >
             {needsSocialLoginInfo ? (
-              <SocialLoginUserInfo onComplete={handleSocialLoginInfoComplete} />
+              <SocialLoginUserInfo
+                onComplete={handleSocialLoginInfoComplete}
+                email={sessionStorage.getItem("socialLoginEmail") || undefined}
+                provider={
+                  sessionStorage.getItem("socialLoginProvider") || undefined
+                }
+                isNewUser={sessionStorage.getItem("isNewSocialUser") === "true"}
+              />
             ) : userVerified ? (
               // Your normal dashboard views
               <>
@@ -550,6 +589,7 @@ const Dashboard: React.FC = () => {
                 {activeView === "terms-and-conditions" && (
                   <TermsAndConditions />
                 )}
+                {activeView === "add-company" && <AddCompany />}
               </>
             ) : (
               <VerifyUserPanel

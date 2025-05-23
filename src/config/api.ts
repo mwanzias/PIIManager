@@ -13,6 +13,7 @@ const API_CONFIG = {
     // Social login endpoints
     socialLoginRequest: "/social-auth/request",
     socialSignin: "/social-auth/signin",
+    registerSocialUser: "/social-auth/register-social-user",
     azureConfig: "/social-auth/azure-config",
   },
 };

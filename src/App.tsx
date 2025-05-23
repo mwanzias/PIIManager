@@ -56,7 +56,7 @@ const App: React.FC = () => {
           path="/add-company"
           element={
             <AzureProtectedRoute>
-              <AddCompany />
+              <Navigate to="/dashboard?view=add-company" replace />
             </AzureProtectedRoute>
           }
         />
