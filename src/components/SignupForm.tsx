@@ -237,6 +237,13 @@ const SignupForm: React.FC = () => {
               Sign Up with Microsoft
             </Button>
           </Stack>
+
+          <div style={{ marginTop: 20, textAlign: "center" }}>
+            <p>Already have an account?</p>
+            <Button appearance="primary" onClick={() => navigate("/login")}>
+              Sign In
+            </Button>
+          </div>
         </>
       ) : (
         <form onSubmit={handleOtpVerification}>

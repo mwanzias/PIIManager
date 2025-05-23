@@ -159,27 +159,46 @@ const Login: React.FC = () => {
           const userEmail = userInfo.mail || userInfo.userPrincipalName;
           setOtpEmail(userEmail);
 
-          // Submit social login data to backend
-          const loginResponse = await submitSocialLogin(
-            "microsoft",
-            userInfo,
-            requestId
-          );
+          try {
+            // Submit social login data to backend
+            const loginResponse = await submitSocialLogin(
+              "microsoft",
+              userInfo,
+              requestId
+            );
 
-          // Sign in the user with the response from the backend
-          const userData = {
-            id: loginResponse.user_id,
-            idNumber: "",
-            email: loginResponse.email || userEmail,
-            phone_number: "",
-            socialLogin: "microsoft",
-            isEmailVerified: true, // Mark email as verified for Microsoft login
-            isPhoneVerified: false,
-            token: loginResponse.access_token,
-          };
+            // Sign in the user with the response from the backend
+            const userData = {
+              id: loginResponse.user_id,
+              idNumber: "",
+              email: loginResponse.email || userEmail,
+              phone_number: "",
+              socialLogin: "microsoft",
+              isEmailVerified: true, // Mark email as verified for Microsoft login
+              isPhoneVerified: false,
+              token: loginResponse.access_token,
+            };
 
-          signIn(userData);
-          navigate("/dashboard"); // Dashboard will show SocialLoginUserInfo for additional info
+            signIn(userData);
+            navigate("/dashboard"); // Dashboard will show SocialLoginUserInfo for additional info
+          } catch (submitError: any) {
+            console.error("Social login submission failed:", submitError);
+
+            // Check if the error is due to user not being registered
+            if (
+              submitError.response &&
+              submitError.response.status === 400 &&
+              submitError.response.data &&
+              submitError.response.data.detail &&
+              submitError.response.data.detail.includes("User not registered")
+            ) {
+              setError(
+                `Account not found. You need to sign up first before logging in with Microsoft.`
+              );
+            } else {
+              setError(`${provider} login failed. Please try again.`);
+            }
+          }
         }
       } else {
         // For other providers like Google, use the existing flow
@@ -362,6 +381,13 @@ const Login: React.FC = () => {
                 Microsoft
               </Button>
             </Stack>
+
+            <div style={{ marginTop: 20, textAlign: "center" }}>
+              <p>Don't have an account?</p>
+              <Button appearance="primary" onClick={() => navigate("/signup")}>
+                Sign Up
+              </Button>
+            </div>
           </>
         ) : showOtpVerification ? (
           <form onSubmit={handleOtpVerification}>
