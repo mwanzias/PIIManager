@@ -368,6 +368,21 @@ const Dashboard: React.FC = () => {
               <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
               {sidebarOpen && "Data Access Management"}
             </button>
+
+            {/* Add Company (Only visible for Azure AD users) */}
+            {user?.socialLogin === "microsoft" && (
+              <button
+                onClick={() => navigate("/add-company")}
+                style={{
+                  ...buttonStyle,
+                  fontWeight: activeView === "add-company" ? "bold" : "normal",
+                  color: activeView === "add-company" ? activeColor : "inherit",
+                }}
+              >
+                <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+                {sidebarOpen && "Add Company"}
+              </button>
+            )}
             {showDataAccess && sidebarOpen && (
               <div style={submenuStyle}>
                 <SidebarSubButton

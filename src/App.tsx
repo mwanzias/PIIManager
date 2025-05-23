@@ -14,6 +14,8 @@ import AccountDeletedBanner from "./components/AccountManagement/AccountDeletedM
 import { useAuth } from "./context/AuthContext";
 import TestimonialModeration from "./components/TestimonialModeration";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AzureProtectedRoute from "./components/AzureProtectedRoute";
+import AddCompany from "./components/AddCompany";
 import EmailVerification from "./components/EmailVerification";
 
 // Protected route component
@@ -48,6 +50,14 @@ const App: React.FC = () => {
             <ProtectedRoute requiredRole="admin">
               <TestimonialModeration />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/add-company"
+          element={
+            <AzureProtectedRoute>
+              <AddCompany />
+            </AzureProtectedRoute>
           }
         />
       </Routes>

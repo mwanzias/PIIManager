@@ -8,6 +8,8 @@ const API_CONFIG = {
     phoneverify: "/auth/verify-phone",
     resendEmailVerification: "/auth/resend-email-verification",
     resendPhoneVerification: "/auth/resend-otp",
+    createCompany: "/companies/create",
+    getCompanies: "/companies",
   },
 };
 
