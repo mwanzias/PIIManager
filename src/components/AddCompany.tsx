@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   PrimaryButton,
@@ -33,6 +33,14 @@ const AddCompany: React.FC = () => {
 
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Ensure only Microsoft login users can access this component
+  useEffect(() => {
+    if (user && user.socialLogin !== "microsoft") {
+      // Redirect non-Microsoft users to the allowed-companies view
+      navigate("/dashboard?view=allowed-companies");
+    }
+  }, [user, navigate]);
 
   const handleChange = (field: keyof CompanyFormData, value: string) => {
     setFormData((prev) => ({

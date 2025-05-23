@@ -19,7 +19,14 @@ msalInstance.initialize().catch((error) => {
 export const getAzureConfig = async () => {
   try {
     const response = await axios.get(
-      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.azureConfig}`
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.azureConfig}`,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
     );
     return response.data;
   } catch (error) {
@@ -107,7 +114,15 @@ export const encryptData = async (data: any) => {
 export const createSocialLoginRequest = async () => {
   try {
     const response = await axios.post(
-      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.socialLoginRequest}`
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.socialLoginRequest}`,
+      {},
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
     );
     return response.data.request_id;
   } catch (error) {
@@ -133,6 +148,13 @@ export const submitSocialLogin = async (
         provider_name: provider,
         response: encryptedData,
         request_id: requestId,
+      },
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       }
     );
 
@@ -161,6 +183,11 @@ export const registerSocialUser = async (
           id_number: idNumber,
           phone_number: phoneNumber,
           provider,
+        },
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
       }
     );

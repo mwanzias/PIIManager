@@ -23,6 +23,7 @@ import InviteAFriend from "./Marketing/InviteFriend";
 import UpdateProfilePicture from "./AccountManagement/UpdateProfilePicture";
 import TermsAndConditions from "./legal/TermsAndConditions";
 import BusinessAllowanceTable from "./BusinessAllowanceTable";
+import ManageCompanies from "./ManageCompanies";
 import VerifyUserPanel from "./AccountManagement/VerifyUserPanel";
 import SocialLoginUserInfo from "./AccountManagement/SocialLoginUserInfo";
 import { accountManagementProps } from "../Interfaces/PseudoInterfaces";
@@ -68,6 +69,7 @@ const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState("dashboard");
   const [showDataAccess, setShowDataAccess] = useState(false);
+  const [showManageCompanies, setShowManageCompanies] = useState(false);
   const [showAccountMgmt, setShowAccountMgmt] = useState(false);
   const [profileMenuProps, setProfileMenuProps] =
     useState<IContextualMenuProps | null>(null);
@@ -92,6 +94,7 @@ const Dashboard: React.FC = () => {
   };
 
   console.log("These are the user details from AUTH", user);
+  console.log("Social login type:", user?.socialLogin);
   const navigate = useNavigate();
 
   // Check for view parameter in URL
@@ -232,14 +235,32 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    setEmailVerified(emailVerified);
-    setPhoneVerified(phoneVerified);
-    if (phoneVerified === true && emailVerified === true) {
+    // Initialize verification status from user object if available
+    if (user) {
+      setEmailVerified(user.isEmailVerified || emailVerified);
+      setPhoneVerified(user.isPhoneVerified || phoneVerified);
+    } else {
+      setEmailVerified(emailVerified);
+      setPhoneVerified(phoneVerified);
+    }
+
+    // If both email and phone are verified, consider the user fully verified
+    if (
+      (user?.isPhoneVerified || phoneVerified) === true &&
+      (user?.isEmailVerified || emailVerified) === true
+    ) {
       setUserVerified(true);
-      setActiveView("allowed-companies");
+
+      // Set default view based on login type
+      if (user?.socialLogin === "microsoft") {
+        setActiveView("all-companies");
+        setShowManageCompanies(true); // Expand the Manage Companies menu
+      } else {
+        setActiveView("allowed-companies");
+      }
     }
     console.log("User verified in use effect:", userVerified);
-  }, [emailVerified, phoneVerified, userVerified]);
+  }, [emailVerified, phoneVerified, userVerified, user]);
 
   // Check if user signed in via social login and needs to provide additional info
   useEffect(() => {
@@ -271,7 +292,14 @@ const Dashboard: React.FC = () => {
     setNeedsSocialLoginInfo(false);
     // After completing the social login info, we can consider the user verified
     setUserVerified(true);
-    setActiveView("allowed-companies");
+
+    // Set default view based on login type
+    if (user?.socialLogin === "microsoft") {
+      setActiveView("all-companies");
+      setShowManageCompanies(true); // Expand the Manage Companies menu
+    } else {
+      setActiveView("allowed-companies");
+    }
   };
 
   const handleuserVerification = (toVerify: string) => {
@@ -286,7 +314,14 @@ const Dashboard: React.FC = () => {
     } else if (toVerify === "mfa") {
       // MFA setup is complete, user is fully verified
       setUserVerified(true);
-      setActiveView("allowed-companies");
+
+      // Set default view based on login type
+      if (user?.socialLogin === "microsoft") {
+        setActiveView("all-companies");
+        setShowManageCompanies(true); // Expand the Manage Companies menu
+      } else {
+        setActiveView("allowed-companies");
+      }
     }
     console.log("User verified:", toVerify);
     console.log("Verification Status:", userVerified);
@@ -399,49 +434,59 @@ const Dashboard: React.FC = () => {
               {sidebarOpen ? <ChevronLeft24Filled /> : <ChevronRight24Filled />}
             </button>
 
-            {/* Data Access Management - Not shown for Microsoft users */}
-            {user?.socialLogin !== "microsoft" && (
-              <button
-                disabled={!userVerified}
-                onClick={() => setShowDataAccess(!showDataAccess)}
-                style={{
-                  ...buttonStyle,
-                  opacity: userVerified ? 1 : 0.5,
-                  fontWeight: showDataAccess ? "bold" : "normal",
-                  color: showDataAccess ? activeColor : "inherit",
-                }}
-              >
-                <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
-                {sidebarOpen && "Data Access Management"}
-              </button>
+            {/* Manage Companies (Only visible for Azure AD users) */}
+            {user?.socialLogin === "microsoft" && (
+              <>
+                <button
+                  disabled={!userVerified}
+                  onClick={() => setShowManageCompanies(!showManageCompanies)}
+                  style={{
+                    ...buttonStyle,
+                    opacity: userVerified ? 1 : 0.5,
+                    fontWeight: showManageCompanies ? "bold" : "normal",
+                    color: showManageCompanies ? activeColor : "inherit",
+                  }}
+                >
+                  <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+                  {sidebarOpen && "Manage Companies"}
+                </button>
+                {showManageCompanies && sidebarOpen && (
+                  <div style={submenuStyle}>
+                    <SidebarSubButton
+                      label="Add Company"
+                      isActive={activeView === "add-company"}
+                      onClick={() => setActiveView("add-company")}
+                    />
+                    <SidebarSubButton
+                      label="All Registered Companies"
+                      isActive={activeView === "all-companies"}
+                      onClick={() => setActiveView("all-companies")}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Add Company (Only visible for Azure AD users) */}
-            {user?.socialLogin === "microsoft" && (
-              <button
-                onClick={() => setActiveView("add-company")}
-                style={{
-                  ...buttonStyle,
-                  fontWeight: activeView === "add-company" ? "bold" : "normal",
-                  color: activeView === "add-company" ? activeColor : "inherit",
-                }}
-              >
-                <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
-                {sidebarOpen && "Add Company"}
-              </button>
-            )}
+            {/* Data Access Management */}
+            <button
+              disabled={!userVerified}
+              onClick={() => setShowDataAccess(!showDataAccess)}
+              style={{
+                ...buttonStyle,
+                opacity: userVerified ? 1 : 0.5,
+                fontWeight: showDataAccess ? "bold" : "normal",
+                color: showDataAccess ? activeColor : "inherit",
+              }}
+            >
+              <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+              {sidebarOpen && "Data Access Management"}
+            </button>
             {showDataAccess && sidebarOpen && (
               <div style={submenuStyle}>
                 <SidebarSubButton
                   label="Allowed Companies"
                   isActive={activeView === "allowed-companies"}
                   onClick={() => setActiveView("allowed-companies")}
-                />
-
-                <SidebarSubButton
-                  label="All Registered Companies"
-                  isActive={activeView === "all-companies"}
-                  onClick={() => setActiveView("all-companies")}
                 />
               </div>
             )}
@@ -539,7 +584,13 @@ const Dashboard: React.FC = () => {
             >
               Secure your most important data during Transactions
             </h2>
-            <div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               <img
                 src={user?.imageUrl || "/logo192.png"}
                 alt="Profile"
@@ -552,6 +603,11 @@ const Dashboard: React.FC = () => {
                 }}
                 onClick={onProfileClick}
               />
+              <span
+                style={{ fontSize: "0.8rem", marginTop: "2px", color: "#fff" }}
+              >
+                {user?.email || ""}
+              </span>
               {profileMenuProps && <ContextualMenu {...profileMenuProps} />}
             </div>
           </div>
@@ -576,7 +632,7 @@ const Dashboard: React.FC = () => {
               // Your normal dashboard views
               <>
                 {activeView === "allowed-companies" && <AllowedCompanies />}
-                {activeView === "all-companies" && <BusinessAllowanceTable />}
+                {activeView === "all-companies" && <ManageCompanies />}
                 {activeView === "delete-account" && (
                   <DeleteAccount {...userDetails} />
                 )}
@@ -590,6 +646,8 @@ const Dashboard: React.FC = () => {
                   <TermsAndConditions />
                 )}
                 {activeView === "add-company" && <AddCompany />}
+
+                {/* Debug panel removed */}
               </>
             ) : (
               <VerifyUserPanel

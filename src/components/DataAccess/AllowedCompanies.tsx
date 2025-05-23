@@ -1,8 +1,15 @@
-//import { allowedCompaniesProps } from "../../Interfaces/PseudoInterfaces";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import API_CONFIG from "../../config/api";
 import { Button } from "@fluentui/react-button";
 import { Edit24Regular } from "@fluentui/react-icons";
 import { Badge } from "@fluentui/react-badge";
+import {
+  Spinner,
+  SpinnerSize,
+  MessageBar,
+  MessageBarType,
+} from "@fluentui/react";
 import { colors } from "../../styling/theme";
 import {
   createTableColumn,
@@ -47,41 +54,19 @@ type displayItem = {
   allowed: dataaccessCell;
 };
 
-const items: displayItem[] = [
-  {
-    name: { label: "Naivas SuperMat", companyname: "Naivas SuperMat A" },
-    sector: { label: "Technology", sectorname: "Software" },
-    allowed: {
-      dataaccess: [
-        { dataname: "idnumber", allowed: true },
-        { dataname: "email address", allowed: false },
-        { dataname: "phone number", allowed: true },
-      ],
-    },
-  },
-  {
-    name: { label: "Company B", companyname: "Finance Inc." },
-    sector: { label: "Finance", sectorname: "Banking" },
-    allowed: {
-      dataaccess: [
-        { dataname: "phone number", allowed: true },
-        { dataname: "email address", allowed: true },
-        { dataname: "idnumber", allowed: false },
-      ],
-    },
-  },
-  {
-    name: { label: "Company C", companyname: "Health Solutions" },
-    sector: { label: "Healthcare", sectorname: "Medical" },
-    allowed: {
-      dataaccess: [
-        { dataname: "phone number", allowed: true },
-        { dataname: "email address", allowed: true },
-        { dataname: "idnumber", allowed: true },
-      ],
-    },
-  },
-];
+// Interface for the API response
+interface PermissionWithCompany {
+  id: number;
+  user_id: number;
+  company_id: number;
+  email_allowed: boolean;
+  id_number_allowed: boolean;
+  phone_number_allowed: boolean;
+  created_at: string;
+  updated_at: string;
+  company_name: string;
+  company_id_str: string;
+}
 
 const getCellFocusMode = (columnId: TableColumnId): DataGridCellFocusMode => {
   switch (columnId) {
@@ -95,8 +80,88 @@ const getCellFocusMode = (columnId: TableColumnId): DataGridCellFocusMode => {
 };
 
 const AllowedCompanies: React.FC = () => {
+  const { user } = useAuth();
   const [editingItems, setEditingItems] = useState(false);
   const [editingCompany, setEditingCompany] = useState<displayItem>([] as any);
+  const [items, setItems] = useState<displayItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAllowedCompanies();
+  }, []);
+
+  const fetchAllowedCompanies = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Get the token from localStorage
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("User not authenticated");
+      }
+
+      const userData = JSON.parse(storedUser);
+      const token = userData.token || userData.access_token;
+
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.getUserPermissions}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.detail || "Failed to fetch allowed companies"
+        );
+      }
+
+      const data: PermissionWithCompany[] = await response.json();
+
+      // Transform API data to displayItem format
+      const transformedItems: displayItem[] = data.map((permission) => ({
+        name: {
+          label: permission.company_name,
+          companyname: permission.company_name,
+        },
+        sector: {
+          label: "Company",
+          sectorname: permission.company_id_str,
+        },
+        allowed: {
+          dataaccess: [
+            { dataname: "idnumber", allowed: permission.id_number_allowed },
+            { dataname: "email address", allowed: permission.email_allowed },
+            {
+              dataname: "phone number",
+              allowed: permission.phone_number_allowed,
+            },
+          ],
+        },
+      }));
+
+      setItems(transformedItems);
+    } catch (err) {
+      console.error("Error fetching allowed companies:", err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+      // Set empty array if there's an error
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns: TableColumnDefinition<displayItem>[] = [
     createTableColumn<displayItem>({
@@ -205,73 +270,98 @@ const AllowedCompanies: React.FC = () => {
 
   return (
     <div>
-      <DataGrid
-        items={items}
-        columns={columns}
-        sortable
-        selectionMode="multiselect"
-        getRowId={(item) => item.name.companyname}
-        onSelectionChange={(e, data) => console.log(data)}
-        style={{ minWidth: "550px" }}
-      >
-        <DataGridHeader>
-          <DataGridRow
-            style={{
-              backgroundColor: colors.primaryLight, // light blue shade
-              textAlign: "center",
-            }}
-            selectionCell={{
-              checkboxIndicator: { "aria-label": "Select all rows" },
-            }}
+      {loading ? (
+        <div
+          style={{ display: "flex", justifyContent: "center", padding: "20px" }}
+        >
+          <Spinner
+            size={SpinnerSize.large}
+            label="Loading allowed companies..."
+          />
+        </div>
+      ) : error ? (
+        <MessageBar
+          messageBarType={MessageBarType.error}
+          isMultiline={true}
+          dismissButtonAriaLabel="Close"
+        >
+          Error loading allowed companies: {error}
+        </MessageBar>
+      ) : items.length === 0 ? (
+        <MessageBar messageBarType={MessageBarType.info} isMultiline={true}>
+          You haven't allowed any companies to access your data yet.
+        </MessageBar>
+      ) : (
+        <>
+          <DataGrid
+            items={items}
+            columns={columns}
+            sortable
+            selectionMode="multiselect"
+            getRowId={(item) => item.name.companyname}
+            onSelectionChange={(e, data) => console.log(data)}
+            style={{ minWidth: "550px" }}
           >
-            {({ renderHeaderCell }) => (
-              <DataGridHeaderCell
+            <DataGridHeader>
+              <DataGridRow
                 style={{
-                  fontWeight: "bold",
-                  color: colors.primary,
+                  backgroundColor: colors.primaryLight, // light blue shade
+                  textAlign: "center",
+                }}
+                selectionCell={{
+                  checkboxIndicator: { "aria-label": "Select all rows" },
                 }}
               >
-                {renderHeaderCell()}
-              </DataGridHeaderCell>
-            )}
-          </DataGridRow>
-        </DataGridHeader>
-        <DataGridBody<displayItem>>
-          {({ item, rowId }) => (
-            <DataGridRow<displayItem>
-              key={rowId}
-              selectionCell={{
-                checkboxIndicator: { "aria-label": "Select row" },
-              }}
-            >
-              {({ renderCell, columnId }) => (
-                <DataGridCell focusMode={getCellFocusMode(columnId)}>
-                  {renderCell(item)}
-                </DataGridCell>
+                {({ renderHeaderCell }) => (
+                  <DataGridHeaderCell
+                    style={{
+                      fontWeight: "bold",
+                      color: colors.primary,
+                    }}
+                  >
+                    {renderHeaderCell()}
+                  </DataGridHeaderCell>
+                )}
+              </DataGridRow>
+            </DataGridHeader>
+            <DataGridBody<displayItem>>
+              {({ item, rowId }) => (
+                <DataGridRow<displayItem>
+                  key={rowId}
+                  selectionCell={{
+                    checkboxIndicator: { "aria-label": "Select row" },
+                  }}
+                >
+                  {({ renderCell, columnId }) => (
+                    <DataGridCell focusMode={getCellFocusMode(columnId)}>
+                      {renderCell(item)}
+                    </DataGridCell>
+                  )}
+                </DataGridRow>
               )}
-            </DataGridRow>
-          )}
-        </DataGridBody>
-      </DataGrid>
+            </DataGridBody>
+          </DataGrid>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        {editingItems && (
-          <CompanyAllowEdit
-            companyname={editingCompany.name.companyname}
-            sectorname={editingCompany.sector.sectorname}
-            allowed={editingCompany.allowed.dataaccess.map((entry) => {
-              return entry.allowed ? entry.dataname : "";
-            })}
-            onSave={handleCompanyEditSave}
-          />
-        )}
-      </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {editingItems && (
+              <CompanyAllowEdit
+                companyname={editingCompany.name.companyname}
+                sectorname={editingCompany.sector.sectorname}
+                allowed={editingCompany.allowed.dataaccess.map((entry) => {
+                  return entry.allowed ? entry.dataname : "";
+                })}
+                onSave={handleCompanyEditSave}
+              />
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

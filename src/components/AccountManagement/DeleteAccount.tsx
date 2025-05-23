@@ -1,46 +1,134 @@
-import React from "react";
+import React, { useState } from "react";
 import { accountManagementProps } from "../../Interfaces/PseudoInterfaces";
 import { Field } from "@fluentui/react-field";
-import { Label, PrimaryButton } from "@fluentui/react";
+import {
+  Label,
+  PrimaryButton,
+  Spinner,
+  SpinnerSize,
+  MessageBar,
+  MessageBarType,
+} from "@fluentui/react";
 import { Input } from "@fluentui/react-input";
 import { useNavigate } from "react-router";
 import AccountDeletedMessage from "./AccountDeletedMessage";
+import { useAuth } from "../../context/AuthContext";
+import API_CONFIG from "../../config/api";
 
 const DeleteAccount: React.FC<accountManagementProps> = ({
   idnumber,
   emailAddress,
   phoneNumber,
 }) => {
-  const [accountMatch, setAccountMatch] = React.useState<boolean>(false);
-  const [accountemail, setAccountEmail] = React.useState<string>("");
-  const [accountphone, setAccountPhone] = React.useState<number>(0);
-  const [verifiedOTP, setVerifiedOTP] = React.useState<boolean>(false);
-  const [otpDestination, setOtpDestination] = React.useState<string>("email");
-  const [accountDeleted, setAccountDeleted] = React.useState<boolean>(false);
-  const [feedbackReceived, setFeedbackReceived] =
-    React.useState<boolean>(false);
-  const [feedbackCancelled, setFeedbackCanceled] =
-    React.useState<boolean>(false);
+  const [accountMatch, setAccountMatch] = useState<boolean>(false);
+  const [accountemail, setAccountEmail] = useState<string>("");
+  const [accountphone, setAccountPhone] = useState<number>(0);
+  const [verifiedOTP, setVerifiedOTP] = useState<boolean>(false);
+  const [otpDestination, setOtpDestination] = useState<string>("email");
+  const [accountDeleted, setAccountDeleted] = useState<boolean>(false);
+  const [feedbackReceived, setFeedbackReceived] = useState<boolean>(false);
+  const [feedbackCancelled, setFeedbackCanceled] = useState<boolean>(false);
+  const [pseudoCode, setPseudoCode] = useState<string>("");
+  const [otp, setOtp] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (accountMatch === true && verifiedOTP === true) {
-      //proceed to post for deletion
-      setAccountDeleted(true);
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.confirmAccountDeletion}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${user?.token}`,
+            },
+            body: JSON.stringify({
+              otp: otp,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Failed to delete account");
+        }
+
+        setAccountDeleted(true);
+        setSuccessMessage("Account deletion initiated successfully");
+
+        // Sign out the user after successful deletion
+        setTimeout(() => {
+          signOut();
+          navigate("/");
+        }, 5000);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while deleting account"
+        );
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleOTP = () => {
-    // Simulate OTP verification
-    setVerifiedOTP(true);
+  const handleOTP = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.requestAccountDeletion}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user?.token}`,
+          },
+          body: JSON.stringify({
+            phone_number_verify: otpDestination === "phone",
+            pseudo_code: pseudoCode,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.detail || "Failed to request account deletion"
+        );
+      }
+
+      const data = await response.json();
+      setSuccessMessage(data.message);
+      setVerifiedOTP(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while requesting account deletion"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNext = () => {
     if (accountemail === emailAddress && accountphone === phoneNumber) {
       setAccountMatch(true);
+      setError(null);
     } else {
-      alert("Account details do not match.");
+      setError("Account details do not match.");
     }
   };
 
@@ -154,22 +242,115 @@ const DeleteAccount: React.FC<accountManagementProps> = ({
                   flexDirection: "column",
                   alignItems: "flex-start",
                   gap: "16px",
+                  padding: "16px",
                 }}
               >
-                <Field label={<Label>Enter the OTP sent to you</Label>}>
-                  <Input placeholder="OTP" type="text" />
+                {error && (
+                  <MessageBar
+                    messageBarType={MessageBarType.error}
+                    isMultiline={false}
+                    dismissButtonAriaLabel="Close"
+                    style={{ width: "100%" }}
+                  >
+                    {error}
+                  </MessageBar>
+                )}
+
+                {successMessage && (
+                  <MessageBar
+                    messageBarType={MessageBarType.success}
+                    isMultiline={false}
+                    dismissButtonAriaLabel="Close"
+                    style={{ width: "100%" }}
+                  >
+                    {successMessage}
+                  </MessageBar>
+                )}
+
+                <Field label={<Label>Enter your Pseudo Code</Label>}>
+                  <Input
+                    placeholder="Pseudo Code"
+                    type="text"
+                    value={pseudoCode}
+                    onChange={(e) => setPseudoCode(e.target.value)}
+                  />
                 </Field>
+
+                <Field label={<Label>Enter the OTP sent to you</Label>}>
+                  <Input
+                    placeholder="OTP"
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    disabled={!verifiedOTP}
+                  />
+                </Field>
+
                 <div style={{ marginTop: 20 }}>
-                  <PrimaryButton onClick={handleOTP}>Next</PrimaryButton>
+                  {isLoading ? (
+                    <Spinner size={SpinnerSize.medium} label="Processing..." />
+                  ) : (
+                    <PrimaryButton onClick={handleOTP} disabled={!pseudoCode}>
+                      Request OTP
+                    </PrimaryButton>
+                  )}
                 </div>
               </div>
             ) : (
               <div>
-                <p>OTP verified successfully. you may delete account</p>
+                <p>
+                  Enter the OTP sent to your{" "}
+                  {otpDestination === "email" ? "email" : "phone"} to confirm
+                  account deletion.
+                </p>
+
+                {error && (
+                  <MessageBar
+                    messageBarType={MessageBarType.error}
+                    isMultiline={false}
+                    dismissButtonAriaLabel="Close"
+                    style={{ marginBottom: "16px", width: "100%" }}
+                  >
+                    {error}
+                  </MessageBar>
+                )}
+
+                {successMessage && (
+                  <MessageBar
+                    messageBarType={MessageBarType.success}
+                    isMultiline={false}
+                    dismissButtonAriaLabel="Close"
+                    style={{ marginBottom: "16px", width: "100%" }}
+                  >
+                    {successMessage}
+                  </MessageBar>
+                )}
+
+                <Field label={<Label>Enter the OTP sent to you</Label>}>
+                  <Input
+                    placeholder="OTP"
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                  />
+                </Field>
+
                 {!accountDeleted ? (
-                  <PrimaryButton onClick={handleDeleteAccount}>
-                    Delete Account
-                  </PrimaryButton>
+                  <div style={{ marginTop: 20 }}>
+                    {isLoading ? (
+                      <Spinner
+                        size={SpinnerSize.medium}
+                        label="Processing..."
+                      />
+                    ) : (
+                      <PrimaryButton
+                        onClick={handleDeleteAccount}
+                        disabled={!otp}
+                      >
+                        Delete Account
+                      </PrimaryButton>
+                    )}
+                  </div>
                 ) : (
                   <div>
                     <p>Your account has been deleted successfully.</p>

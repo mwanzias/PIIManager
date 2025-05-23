@@ -37,6 +37,8 @@ const Login: React.FC = () => {
   const [socialLoginType, setSocialLoginType] = useState<string>("");
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [codeSent, setCodeSent] = useState<boolean>(false);
+  const [isSendingCode, setIsSendingCode] = useState<boolean>(false);
 
   // use to set email and phone verified states
   const [isPhoneVerified, setIsPhoneVerified] = useState<boolean>(false);
@@ -188,8 +190,8 @@ const Login: React.FC = () => {
                 email: loginResponse.email || userEmail,
                 phone_number: loginResponse.phone_number || "",
                 socialLogin: "microsoft",
-                isEmailVerified: true, // Mark email as verified for Microsoft login
-                isPhoneVerified: false, // Phone verification status should come from backend
+                isEmailVerified: loginResponse.is_email_verified || true, // Email is typically verified for Microsoft login
+                isPhoneVerified: loginResponse.is_phone_verified || false, // Get phone verification status from backend
                 token: loginResponse.access_token,
               };
 
@@ -240,7 +242,14 @@ const Login: React.FC = () => {
 
   const handleSendMfaCode = () => {
     // In a real app, this would trigger sending an MFA code to the selected method
+    setIsSendingCode(true);
     console.log(`Sending MFA code to ${mfaMethod}: ${identifier}`);
+
+    // Simulate API delay for sending code
+    setTimeout(() => {
+      setIsSendingCode(false);
+      setCodeSent(true);
+    }, 1500);
   };
 
   return (
@@ -298,27 +307,45 @@ const Login: React.FC = () => {
               </RadioGroup>
 
               <Button
-                appearance="subtle"
+                appearance="primary"
                 onClick={handleSendMfaCode}
-                style={{ alignSelf: "flex-start" }}
+                disabled={isSendingCode}
+                style={{
+                  alignSelf: "flex-start",
+                  backgroundColor: colors.primary,
+                  color: "white",
+                  borderRadius: "20px",
+                  padding: "8px 24px",
+                }}
               >
-                Send Code
+                {isSendingCode ? "Sending..." : "Send Code"}
               </Button>
 
-              <TextField
-                label="Verification Code"
-                value={mfaCode}
-                onChange={(e, newValue) => setMfaCode(newValue || "")}
-                required
-              />
+              {/* Only show verification code field after code has been sent */}
+              {codeSent && (
+                <TextField
+                  label="Verification Code"
+                  value={mfaCode}
+                  onChange={(e, newValue) => setMfaCode(newValue || "")}
+                  required
+                />
+              )}
 
               {error && <div style={{ color: colors.error }}>{error}</div>}
 
-              <PrimaryButton
+              <Button
+                appearance="primary"
                 type="submit"
-                text={isVerifying ? "Verifying..." : "Verify"}
-                disabled={isVerifying}
-              />
+                disabled={isVerifying || !codeSent}
+                style={{
+                  backgroundColor: colors.primary,
+                  color: "white",
+                  borderRadius: "20px",
+                  padding: "8px 24px",
+                }}
+              >
+                {isVerifying ? "Verifying..." : "Verify"}
+              </Button>
 
               <ProcessingSpinner
                 show={isVerifying}
@@ -344,11 +371,20 @@ const Login: React.FC = () => {
                   required
                 />
                 {error && <div style={{ color: colors.error }}>{error}</div>}
-                <PrimaryButton
+                <Button
+                  appearance="primary"
                   type="submit"
-                  text={isLoggingIn ? "Logging in..." : "Login"}
                   disabled={isLoggingIn}
-                />
+                  style={{
+                    backgroundColor: colors.primary,
+                    color: "white",
+                    borderRadius: "20px",
+                    padding: "8px 24px",
+                    width: "100%",
+                  }}
+                >
+                  {isLoggingIn ? "Logging in..." : "Login"}
+                </Button>
                 <ProcessingSpinner
                   show={isLoggingIn}
                   message="Verifying your credentials..."
@@ -405,11 +441,19 @@ const Login: React.FC = () => {
                 required
               />
               {error && <div style={{ color: colors.error }}>{error}</div>}
-              <PrimaryButton
+              <Button
+                appearance="primary"
                 type="submit"
-                text={isVerifying ? "Verifying..." : "Verify"}
                 disabled={isVerifying}
-              />
+                style={{
+                  backgroundColor: colors.primary,
+                  color: "white",
+                  borderRadius: "20px",
+                  padding: "8px 24px",
+                }}
+              >
+                {isVerifying ? "Verifying..." : "Verify"}
+              </Button>
               <ProcessingSpinner
                 show={isVerifying}
                 message="Verifying your code..."
@@ -417,6 +461,10 @@ const Login: React.FC = () => {
               <Button
                 appearance="subtle"
                 onClick={() => setShowOtpVerification(false)}
+                style={{
+                  borderRadius: "20px",
+                  padding: "8px 24px",
+                }}
               >
                 Back to Login
               </Button>
