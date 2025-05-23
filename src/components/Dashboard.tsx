@@ -169,7 +169,20 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    // If user is logged in with Microsoft, also log out from Microsoft
+    if (user?.socialLogin === "microsoft") {
+      try {
+        // Import the handleMsalLogout function
+        const { handleMsalLogout } = await import("../utils/msalUtils");
+        // Log out from Microsoft
+        await handleMsalLogout();
+      } catch (error) {
+        console.error("Error logging out from Microsoft:", error);
+      }
+    }
+
+    // Sign out from the app
     signOut();
     navigate("/");
   };
@@ -354,20 +367,22 @@ const Dashboard: React.FC = () => {
               {sidebarOpen ? <ChevronLeft24Filled /> : <ChevronRight24Filled />}
             </button>
 
-            {/* Data Access Management */}
-            <button
-              disabled={!userVerified}
-              onClick={() => setShowDataAccess(!showDataAccess)}
-              style={{
-                ...buttonStyle,
-                opacity: userVerified ? 1 : 0.5,
-                fontWeight: showDataAccess ? "bold" : "normal",
-                color: showDataAccess ? activeColor : "inherit",
-              }}
-            >
-              <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
-              {sidebarOpen && "Data Access Management"}
-            </button>
+            {/* Data Access Management - Not shown for Microsoft users */}
+            {user?.socialLogin !== "microsoft" && (
+              <button
+                disabled={!userVerified}
+                onClick={() => setShowDataAccess(!showDataAccess)}
+                style={{
+                  ...buttonStyle,
+                  opacity: userVerified ? 1 : 0.5,
+                  fontWeight: showDataAccess ? "bold" : "normal",
+                  color: showDataAccess ? activeColor : "inherit",
+                }}
+              >
+                <List24Filled style={{ marginRight: sidebarOpen ? 10 : 0 }} />
+                {sidebarOpen && "Data Access Management"}
+              </button>
+            )}
 
             {/* Add Company (Only visible for Azure AD users) */}
             {user?.socialLogin === "microsoft" && (

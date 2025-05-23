@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { TextField, PrimaryButton, Stack, Separator } from "@fluentui/react";
+import {
+  TextField,
+  PrimaryButton,
+  Stack,
+  Separator,
+  MessageBar,
+  MessageBarType,
+} from "@fluentui/react";
 import { Button, RadioGroup, Radio } from "@fluentui/react-components";
 import { useAuth } from "../context/AuthContext";
 import { GooglePayIcon, MicrosoftIcon } from "../svgIcons/paymentIcon";
@@ -9,6 +16,11 @@ import ProcessingSpinner from "./Marketing/Spinner";
 import { colors, cardStyles } from "../styling/theme";
 import { ShieldLockFilled } from "@fluentui/react-icons";
 import API_CONFIG from "../config/api";
+import {
+  handleMsalLogin,
+  createSocialLoginRequest,
+  submitSocialLogin,
+} from "../utils/msalUtils";
 
 const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState<string>(""); // Email or Phone
@@ -127,19 +139,66 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    // In a real app, you would redirect to OAuth provider
-    // For now, we'll simulate the OAuth flow by showing the OTP verification form
-    setShowOtpVerification(true);
+  const handleSocialLogin = async (provider: string) => {
+    setError("");
+    setIsLoggingIn(true);
     setSocialLoginType(provider);
 
-    // For demo purposes, we'll use a mock email
-    const mockEmail =
-      provider === "google" ? "user@gmail.com" : "user@outlook.com";
-    setOtpEmail(mockEmail);
+    try {
+      if (provider === "microsoft") {
+        // Create a social login request to get a request ID
+        const requestId = await createSocialLoginRequest();
 
-    // In a real app, this is where you would trigger the backend to send an OTP
-    console.log(`Sending OTP to ${mockEmail} for ${provider} login`);
+        // Handle Azure AD login with MSAL
+        const msalResponse = await handleMsalLogin();
+
+        if (msalResponse && msalResponse.userInfo) {
+          const { userInfo } = msalResponse;
+
+          // Set email for display
+          const userEmail = userInfo.mail || userInfo.userPrincipalName;
+          setOtpEmail(userEmail);
+
+          // Submit social login data to backend
+          const loginResponse = await submitSocialLogin(
+            "microsoft",
+            userInfo,
+            requestId
+          );
+
+          // Sign in the user with the response from the backend
+          const userData = {
+            id: loginResponse.user_id,
+            idNumber: "",
+            email: loginResponse.email || userEmail,
+            phone_number: "",
+            socialLogin: "microsoft",
+            isEmailVerified: true, // Mark email as verified for Microsoft login
+            isPhoneVerified: false,
+            token: loginResponse.access_token,
+          };
+
+          signIn(userData);
+          navigate("/dashboard"); // Dashboard will show SocialLoginUserInfo for additional info
+        }
+      } else {
+        // For other providers like Google, use the existing flow
+        setShowOtpVerification(true);
+
+        // For demo purposes, we'll use a mock email
+        const mockEmail =
+          provider === "google" ? "user@gmail.com" : "user@outlook.com";
+        setOtpEmail(mockEmail);
+
+        // In a real app, this is where you would trigger the backend to send an OTP
+        console.log(`Sending OTP to ${mockEmail} for ${provider} login`);
+      }
+    } catch (error) {
+      console.error(`${provider} login failed:`, error);
+      setError(`${provider} login failed. Please try again.`);
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   const handleMfaVerification = (e: React.FormEvent<HTMLFormElement>) => {

@@ -44,6 +44,7 @@ const SocialLoginUserInfo: React.FC<SocialLoginUserInfoProps> = ({
       updateUser({
         idNumber,
         phone_number: phoneNumber,
+        isEmailVerified: true, // Ensure email is marked as verified for Microsoft users
       });
 
       setSuccess(true);

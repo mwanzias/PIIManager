@@ -10,6 +10,10 @@ const API_CONFIG = {
     resendPhoneVerification: "/auth/resend-otp",
     createCompany: "/companies/create",
     getCompanies: "/companies",
+    // Social login endpoints
+    socialLoginRequest: "/social-auth/request",
+    socialSignin: "/social-auth/signin",
+    azureConfig: "/social-auth/azure-config",
   },
 };
 
