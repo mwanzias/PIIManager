@@ -86,6 +86,8 @@ const AllowedCompanies: React.FC = () => {
   const [items, setItems] = useState<displayItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [revoking, setRevoking] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllowedCompanies();
@@ -238,34 +240,95 @@ const AllowedCompanies: React.FC = () => {
     }),
     createTableColumn<displayItem>({
       columnId: "blockinfo",
-      renderHeaderCell: () => "blockinfo",
-      renderCell: (item) => (
-        <TableCellLayout>
-          <Button
-            icon={<Edit24Regular />}
-            appearance="primary"
-            shape="circular"
-            style={{
-              borderRadius: "9999px",
-              padding: "6px 12px",
-            }}
-            onClick={() => {
-              console.log(
-                "This company is to be blocked",
-                item.name.companyname
-              );
-            }}
-          >
-            Block Access
-          </Button>
-        </TableCellLayout>
-      ),
+      renderHeaderCell: () => "Actions",
+      renderCell: (item) => {
+        // Find the company ID from the name
+        const companyData = items.find(
+          (company) => company.name.companyname === item.name.companyname
+        );
+        const companyId = companyData
+          ? parseInt(companyData.sector.sectorname.split("-")[0].trim())
+          : null;
+
+        return (
+          <TableCellLayout>
+            <Button
+              appearance="primary"
+              shape="circular"
+              style={{
+                borderRadius: "9999px",
+                padding: "6px 12px",
+                backgroundColor: colors.error,
+              }}
+              onClick={() => handleRevokePermissions(companyId)}
+              disabled={!companyId}
+            >
+              Revoke Access
+            </Button>
+          </TableCellLayout>
+        );
+      },
     }),
   ];
 
   const handleCompanyEditSave = () => {
     setEditingItems(false);
     setEditingCompany({} as displayItem);
+    // Refresh the list after editing
+    fetchAllowedCompanies();
+  };
+
+  const handleRevokePermissions = async (companyId: number | null) => {
+    if (!companyId) {
+      setError("Invalid company ID");
+      return;
+    }
+
+    setRevoking(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      // Get the token from localStorage
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("User not authenticated");
+      }
+
+      const userData = JSON.parse(storedUser);
+      const token = userData.token || userData.access_token;
+
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.revokeCompanyPermissions}/${companyId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to revoke permissions");
+      }
+
+      setSuccessMessage(`Successfully revoked all permissions for the company`);
+
+      // Refresh the list after revoking
+      fetchAllowedCompanies();
+    } catch (err) {
+      console.error("Error revoking permissions:", err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setRevoking(false);
+    }
   };
 
   return (

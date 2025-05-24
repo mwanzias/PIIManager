@@ -19,6 +19,7 @@ import DeleteAccount from "./AccountManagement/DeleteAccount";
 import SuspentAccount from "./AccountManagement/SuspendAccount";
 import CompaniesUnassigned from "./DataAccess/CompaniesUnassigned";
 import AllowedCompanies from "./DataAccess/AllowedCompanies";
+import AssignDataAccessPermissions from "./DataAccess/AssignDataAccessPermissions";
 import InviteAFriend from "./Marketing/InviteFriend";
 import UpdateProfilePicture from "./AccountManagement/UpdateProfilePicture";
 import TermsAndConditions from "./legal/TermsAndConditions";
@@ -488,6 +489,11 @@ const Dashboard: React.FC = () => {
                   isActive={activeView === "allowed-companies"}
                   onClick={() => setActiveView("allowed-companies")}
                 />
+                <SidebarSubButton
+                  label="Assign Data Access Permissions"
+                  isActive={activeView === "assign-data-access"}
+                  onClick={() => setActiveView("assign-data-access")}
+                />
               </div>
             )}
 
@@ -632,6 +638,9 @@ const Dashboard: React.FC = () => {
               // Your normal dashboard views
               <>
                 {activeView === "allowed-companies" && <AllowedCompanies />}
+                {activeView === "assign-data-access" && (
+                  <AssignDataAccessPermissions />
+                )}
                 {activeView === "all-companies" && <ManageCompanies />}
                 {activeView === "delete-account" && (
                   <DeleteAccount {...userDetails} />

@@ -1,4 +1,14 @@
-# Getting Started with Create React App
+# Privacy Pseudo Application
+
+This is the frontend application for the Privacy Pseudo platform, which provides privacy-focused services for users.
+
+## Documentation
+
+- [Account Deletion](./docs/AccountDeletion.md) - Documentation for the account deletion functionality
+- [Data Access Permissions](./docs/DataAccessPermissions.md) - Documentation for managing data access permissions
+- [Add Company Integration](./docs/AddCompanyIntegration.md) - Documentation for adding company integrations
+
+## Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
